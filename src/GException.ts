@@ -55,7 +55,9 @@ type GExceptionConstructorNthArgument = Partial<GExceptionProps>;
 
 type GExceptionConstructorFirstArgument = unknown[] | unknown | string;
 
-type GExceptionConstructorSecondArgument = string | GExceptionConstructorNthArgument;
+type GExceptionConstructorSecondArgument =
+  | string
+  | GExceptionConstructorNthArgument;
 
 function parseFirstTwoConstructorArguments(
   messageOrCauses: GExceptionConstructorFirstArgument,
@@ -147,13 +149,13 @@ export class GException extends Error {
   constructor(...constructorArgs: GExceptionConstructorArguments) {
     const nowDate = new Date();
     const [messageOrCauses, argOrMessage, ...args] = constructorArgs;
-    const {causes, message, firstArgs} = parseFirstTwoConstructorArguments(
+    const { causes, message, firstArgs } = parseFirstTwoConstructorArguments(
       messageOrCauses,
       argOrMessage,
     );
     super(message);
     this[G_EXCEPTION_CLASS_NAME] = Object.getPrototypeOf(this).constructor.name;
-    this[G_EXCEPTION_OWN_PROPS] = {message};
+    this[G_EXCEPTION_OWN_PROPS] = { message };
     this[G_EXCEPTION_DERIVED_PROPS] = {};
     this[G_EXCEPTION_EXTENSION_PROPS] = {};
     this._initCauses(causes);
@@ -163,7 +165,10 @@ export class GException extends Error {
   }
 
   protected getTemplateCompilationContext(): Record<string, unknown> {
-    return {...this[G_EXCEPTION_EXTENSION_PROPS], ...this[G_EXCEPTION_OWN_PROPS]};
+    return {
+      ...this[G_EXCEPTION_EXTENSION_PROPS],
+      ...this[G_EXCEPTION_OWN_PROPS],
+    };
   }
 
   protected compileTemplate(template: string): string {
@@ -183,12 +188,17 @@ export class GException extends Error {
 
   static is(obj: unknown): obj is GException {
     return (
-      typeof obj === 'object' && obj != null && (obj as any)?.[G_EXCEPTION_CLASS_NAME]
+      typeof obj === 'object' &&
+      obj != null &&
+      (obj as any)?.[G_EXCEPTION_CLASS_NAME]
     );
   }
 
   static isExact(obj: unknown): obj is GException {
-    return GException.is(obj) && (obj as any)?.[G_EXCEPTION_CLASS_NAME] === GException.name;
+    return (
+      GException.is(obj) &&
+      (obj as any)?.[G_EXCEPTION_CLASS_NAME] === GException.name
+    );
   }
 
   protected setErrProp<K extends keyof GExceptionProps>(
@@ -201,7 +211,7 @@ export class GException extends Error {
 
   setInfoProp<T = unknown>(k: string, v: T): this {
     if (this.getInfo() === undefined) {
-      this.setInfo({[k]: v});
+      this.setInfo({ [k]: v });
     } else {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
@@ -247,7 +257,9 @@ export class GException extends Error {
     return this[G_EXCEPTION_DERIVED_PROPS].compiledStack;
   }
 
-  setDisplayMessage(displayMessage: GExceptionDisplayMessageInput = true): this {
+  setDisplayMessage(
+    displayMessage: GExceptionDisplayMessageInput = true,
+  ): this {
     return this.setErrProp('displayMessage', displayMessage);
   }
 
@@ -261,9 +273,10 @@ export class GException extends Error {
       return this.getMessage();
     }
     if (this[G_EXCEPTION_DERIVED_PROPS].compiledDisplayMessage === undefined) {
-      this[G_EXCEPTION_DERIVED_PROPS].compiledDisplayMessage = this.compileTemplate(
-        this[G_EXCEPTION_OWN_PROPS].displayMessage as string,
-      );
+      this[G_EXCEPTION_DERIVED_PROPS].compiledDisplayMessage =
+        this.compileTemplate(
+          this[G_EXCEPTION_OWN_PROPS].displayMessage as string,
+        );
     }
     return this[G_EXCEPTION_DERIVED_PROPS].compiledMessage;
   }
