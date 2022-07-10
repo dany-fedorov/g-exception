@@ -1,0 +1,15 @@
+# source
+**/*.ts
+*.ts
+
+.idea/
+/.vscode
+.gitignore
+.prettierrc
+.eslintrc.js
+.eslintignore
+node_modules/
+tsconfig.json
+webpack.config.js
+**/*.md
+
