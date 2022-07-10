@@ -41,14 +41,22 @@ type GExceptionTimestamp = string;
 
 type GExceptionTimestampResult = GExceptionTimestamp | undefined;
 
+const MESSAGE_KEY = 'message';
+const DISPLAY_MESSAGE_KEY = 'displayMessage';
+const INFO_KEY = 'info';
+const CODE_KEY = 'code';
+const ID_KEY = 'id';
+const CAUSES_KEY = 'causes';
+const TIMESTAMP_KEY = 'timestamp';
+
 interface GExceptionProps extends Record<string, unknown> {
-  message: GExceptionMessage;
-  displayMessage?: GExceptionDisplayMessageInput;
-  info?: GExceptionInfo;
-  code?: GExceptionCode;
-  id?: GExceptionId;
-  causes?: GExceptionCauses;
-  timestamp?: GExceptionTimestamp;
+  [MESSAGE_KEY]: GExceptionMessage;
+  [DISPLAY_MESSAGE_KEY]?: GExceptionDisplayMessageInput;
+  [INFO_KEY]?: GExceptionInfo;
+  [CODE_KEY]?: GExceptionCode;
+  [ID_KEY]?: GExceptionId;
+  [CAUSES_KEY]?: GExceptionCauses;
+  [TIMESTAMP_KEY]?: GExceptionTimestamp;
 }
 
 type GExceptionConstructorNthArgument = Partial<GExceptionProps>;
@@ -65,28 +73,24 @@ function parseFirstTwoConstructorArguments(
 ): {
   causes: GExceptionCauses | undefined;
   message: GExceptionMessage;
-  firstArgs: GExceptionConstructorNthArgument[];
+  prependArgs: GExceptionConstructorNthArgument[];
 } {
-  let causes: GExceptionCauses | undefined;
-  let message: GExceptionMessage;
-  let firstArgs: GExceptionConstructorNthArgument[];
-
   const isMessageFirst =
     typeof messageOrCauses === 'string' &&
     (argOrMessage === undefined || typeof argOrMessage === 'object');
   if (isMessageFirst) {
-    message = messageOrCauses;
-    firstArgs = [argOrMessage as GExceptionConstructorNthArgument];
+    return {
+      causes: undefined,
+      message: messageOrCauses as GExceptionMessage,
+      prependArgs: [argOrMessage as GExceptionConstructorNthArgument],
+    };
   } else {
-    causes = toArray(messageOrCauses);
-    message = argOrMessage as string;
-    firstArgs = [];
+    return {
+      causes: toArray(messageOrCauses),
+      message: argOrMessage as GExceptionMessage,
+      prependArgs: [],
+    };
   }
-  return {
-    causes,
-    message,
-    firstArgs,
-  };
 }
 
 export type GExceptionConstructorArguments = [
@@ -103,13 +107,40 @@ interface GExceptionDerivedProps {
 
 type GExceptionExtensions = Record<string, unknown>;
 
+const GEID_DELIMITER = '_';
+const GEID_PREFIX = 'GEID';
+const GEID_RANDOM_BYTES_NUM = 5;
+const GEID_RANDOM_BYTES_ENCODING = 'hex';
+
+function mkGEID(nowDate: Date): string {
+  return [
+    GEID_PREFIX,
+    nowDate.getTime(),
+    crypto
+      .randomBytes(GEID_RANDOM_BYTES_NUM)
+      .toString(GEID_RANDOM_BYTES_ENCODING),
+  ].join(GEID_DELIMITER);
+}
+
 export class GException extends Error {
+  static readonly MESSAGE_KEY = MESSAGE_KEY;
+  static readonly DISPLAY_MESSAGE_KEY = DISPLAY_MESSAGE_KEY;
+  static readonly INFO_KEY = INFO_KEY;
+  static readonly CODE_KEY = CODE_KEY;
+  static readonly ID_KEY = ID_KEY;
+  static readonly CAUSES_KEY = CAUSES_KEY;
+  static readonly TIMESTAMP_KEY = TIMESTAMP_KEY;
+
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
   private readonly [G_EXCEPTION_CLASS_NAME]: string;
   private readonly [G_EXCEPTION_OWN_PROPS]: GExceptionProps;
   private readonly [G_EXCEPTION_DERIVED_PROPS]: GExceptionDerivedProps;
   private readonly [G_EXCEPTION_EXTENSION_PROPS]: GExceptionExtensions;
+
+  /**
+   * Constructor
+   */
 
   private _initCauses(causes?: GExceptionCauses) {
     if (causes !== undefined) {
@@ -121,7 +152,7 @@ export class GException extends Error {
     args.forEach((arg) => {
       for (const k in arg) {
         const v = arg[k];
-        if (k === 'info') {
+        if (k === GException.INFO_KEY) {
           this.mergeIntoInfo(v as GExceptionInfo);
         } else {
           this.setErrProp(k, v);
@@ -138,18 +169,14 @@ export class GException extends Error {
 
   private _initId(nowDate: Date) {
     if (this.getId() === undefined) {
-      this.setId(
-        ['GEID', nowDate.getTime(), crypto.randomBytes(5).toString('hex')].join(
-          '_',
-        ),
-      );
+      this.setId(mkGEID(nowDate));
     }
   }
 
   constructor(...constructorArgs: GExceptionConstructorArguments) {
     const nowDate = new Date();
     const [messageOrCauses, argOrMessage, ...args] = constructorArgs;
-    const { causes, message, firstArgs } = parseFirstTwoConstructorArguments(
+    const { causes, message, prependArgs } = parseFirstTwoConstructorArguments(
       messageOrCauses,
       argOrMessage,
     );
@@ -159,20 +186,9 @@ export class GException extends Error {
     this[G_EXCEPTION_DERIVED_PROPS] = {};
     this[G_EXCEPTION_EXTENSION_PROPS] = {};
     this._initCauses(causes);
-    this._initFromArguments([...firstArgs, ...args]);
+    this._initFromArguments([...prependArgs, ...args]);
     this._initTimestamp(nowDate);
     this._initId(nowDate);
-  }
-
-  protected getTemplateCompilationContext(): Record<string, unknown> {
-    return {
-      ...this[G_EXCEPTION_EXTENSION_PROPS],
-      ...this[G_EXCEPTION_OWN_PROPS],
-    };
-  }
-
-  protected compileTemplate(template: string): string {
-    return hbs.compile(template)(this.getTemplateCompilationContext());
   }
 
   static from(exceptionProperties: GExceptionProps): GException {
@@ -186,6 +202,25 @@ export class GException extends Error {
     return new GException(messageOrCauses, argOrMessage);
   }
 
+  /**
+   * Template Compilation
+   */
+
+  protected getTemplateCompilationContext(): Record<string, unknown> {
+    return {
+      ...this[G_EXCEPTION_EXTENSION_PROPS],
+      ...this[G_EXCEPTION_OWN_PROPS],
+    };
+  }
+
+  protected compileTemplate(template: string): string {
+    return hbs.compile(template)(this.getTemplateCompilationContext());
+  }
+
+  /**
+   * Type Predicates
+   */
+
   static is(obj: unknown): obj is GException {
     return (
       typeof obj === 'object' &&
@@ -194,12 +229,16 @@ export class GException extends Error {
     );
   }
 
-  static isExact(obj: unknown): obj is GException {
+  static isExactly(obj: unknown): obj is GException {
     return (
       GException.is(obj) &&
       (obj as any)?.[G_EXCEPTION_CLASS_NAME] === GException.name
     );
   }
+
+  /**
+   * Getters & Setters
+   */
 
   protected setErrProp<K extends keyof GExceptionProps>(
     propName: K,
@@ -231,7 +270,7 @@ export class GException extends Error {
   }
 
   setMessage(message: GExceptionMessage): this {
-    return this.setErrProp('message', message);
+    return this.setErrProp(GException.MESSAGE_KEY, message);
   }
 
   getMessage(): GExceptionMessage {
@@ -243,12 +282,7 @@ export class GException extends Error {
     return this[G_EXCEPTION_DERIVED_PROPS].compiledMessage;
   }
 
-  override get message(): string {
-    return this.getMessage();
-  }
-
   getStack(): string {
-    console.log('get', this.stack, this[G_EXCEPTION_OWN_PROPS]);
     if (this[G_EXCEPTION_DERIVED_PROPS].compiledStack === undefined) {
       this[G_EXCEPTION_DERIVED_PROPS].compiledStack = hbs.compile(this.stack)(
         this[G_EXCEPTION_OWN_PROPS],
@@ -260,7 +294,7 @@ export class GException extends Error {
   setDisplayMessage(
     displayMessage: GExceptionDisplayMessageInput = true,
   ): this {
-    return this.setErrProp('displayMessage', displayMessage);
+    return this.setErrProp(GException.DISPLAY_MESSAGE_KEY, displayMessage);
   }
 
   getDisplayMessage(): GExceptionDisplayMessageResult {
@@ -282,7 +316,7 @@ export class GException extends Error {
   }
 
   setInfo(info: GExceptionInfo): this {
-    return this.setErrProp('info', info);
+    return this.setErrProp(INFO_KEY, info);
   }
 
   getInfo(): GExceptionInfoResult {
@@ -290,7 +324,7 @@ export class GException extends Error {
   }
 
   setCode(code: GExceptionCode): this {
-    return this.setErrProp('code', code);
+    return this.setErrProp(GException.CODE_KEY, code);
   }
 
   getCode(): GExceptionCodeResult {
@@ -298,7 +332,7 @@ export class GException extends Error {
   }
 
   setId(id: GExceptionId) {
-    return this.setErrProp('id', id);
+    return this.setErrProp(GException.ID_KEY, id);
   }
 
   getId(): GExceptionIdResult {
@@ -306,7 +340,7 @@ export class GException extends Error {
   }
 
   setCauses(causes: GExceptionCauses) {
-    return this.setErrProp('causes', causes);
+    return this.setErrProp(GException.CAUSES_KEY, causes);
   }
 
   getCauses(): GExceptionCausesResult {
@@ -314,7 +348,10 @@ export class GException extends Error {
   }
 
   setTimestamp(timestamp?: string): this {
-    return this.setErrProp('timestamp', timestamp || new Date().toISOString());
+    return this.setErrProp(
+      GException.TIMESTAMP_KEY,
+      timestamp || new Date().toISOString(),
+    );
   }
 
   getTimestamp(): GExceptionTimestampResult {
@@ -328,5 +365,13 @@ export class GException extends Error {
 
   protected getExtensionProp(k: string): undefined | unknown {
     return this[G_EXCEPTION_EXTENSION_PROPS][k];
+  }
+
+  /**
+   * Error API overrride
+   */
+
+  override get message(): string {
+    return this.getMessage();
   }
 }
