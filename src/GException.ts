@@ -109,7 +109,7 @@ type GExceptionExtensions = Record<string, unknown>;
 
 const GEID_DELIMITER = '_';
 const GEID_PREFIX = 'GEID';
-const GEID_RANDOM_BYTES_NUM = 5;
+const GEID_RANDOM_BYTES_NUM = 6;
 const GEID_RANDOM_BYTES_ENCODING = 'hex';
 
 function mkGEID(nowDate: Date): string {
