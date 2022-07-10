@@ -1,5 +1,5 @@
 {
-  "name": "gerror",
+  "name": "g-exception",
   "version": "0.0.1",
   "description": "",
   "main": "./dist/index.js",
@@ -12,6 +12,13 @@
   "engines": {
     "node": ">= 16.15.1",
     "npm": ">= 8.11.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/dany-fedorov/g-exception.git"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "keywords": [],
   "author": "Dany Fedorov",

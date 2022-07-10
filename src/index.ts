@@ -1,1 +1,1 @@
-export { GError } from './GError';
+export { GException } from './GException';
