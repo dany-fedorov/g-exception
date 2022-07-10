@@ -1,6 +1,8 @@
 # source
 **/*.ts
 *.ts
+!**/*.d.ts
+!*.d.ts
 
 .idea/
 /.vscode
