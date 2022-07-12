@@ -4,8 +4,8 @@
   "description": "G",
   "main": "./dist/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "tsc",
+    "test": "jest",
+    "build": "tsc -p ./tsconfig.build.json",
     "prepare": "rm -rf ./dist && npm run build",
     "build-watch": "chokidar './src/**/*.ts' -c 'npm run build' -i './node_modules/**/*' --initial"
   },
@@ -25,14 +25,17 @@
   "license": "MIT",
   "devDependencies": {
     "@tsconfig/node16-strictest": "^1.0.3",
+    "@types/jest": "^28.1.4",
     "@typescript-eslint/eslint-plugin": "5.29.0",
     "@typescript-eslint/parser": "5.29.0",
     "chokidar": "^3.5.3",
     "eslint": "8.18.0",
     "eslint-config-prettier": "8.5.0",
     "eslint-plugin-import": "2.26.0",
-    "jest": "28.1.1",
+    "jest": "^28.1.2",
     "prettier": "2.7.1",
+    "ts-jest": "^28.0.5",
+    "ts-node": "^10.8.2",
     "typescript": "^4.7.4"
   },
   "dependencies": {

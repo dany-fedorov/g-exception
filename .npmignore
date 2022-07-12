@@ -6,6 +6,7 @@
 
 .idea/
 /.vscode
+/tests
 .gitignore
 .prettierrc
 .eslintrc.js
