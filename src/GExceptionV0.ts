@@ -244,9 +244,7 @@ function parseConstructorArgumentsBackup(
   const message = mkConstructorProblemMessage(
     [`Received unexpected ${unexpectedNArguments}`, badArgsReport].join(':'),
   );
-  if (GExceptionV0.getConfig().logProblemsToStdout) {
-    console.warn(message);
-  }
+  logConstructorProblem(message);
   const prependToRest = badArgsToProcess.filter((a) =>
     isPotentialNthArgument(a),
   );
@@ -422,6 +420,12 @@ const HBS_HELPERS = {
     return jsonStringifySafe(context);
   },
 };
+
+function logConstructorProblem(message: string) {
+  if (GExceptionV0.getConfig().logProblemsToStdout) {
+    console.warn(message);
+  }
+}
 
 function logProblem(self: GExceptionV0, message: string) {
   if (self.getEffectiveConfig().logProblemsToStdout) {
