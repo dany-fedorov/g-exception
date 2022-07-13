@@ -3,11 +3,12 @@
   "compilerOptions": {
     "baseUrl": "./src",
     "outDir": "./dist",
-    "declaration": true
+    "declaration": true,
+    "noPropertyAccessFromIndexSignature": false
   },
   "include": [
     "src",
-    "tests",
+    "__tests__",
     "scripts"
   ],
   "exclude": [

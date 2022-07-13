@@ -1,12 +1,12 @@
-import { GExceptionV0 } from '../src/GExceptionV0';
-import { evalConstructorArgumentsCombinations } from './lib/evalConstructorArgumentsCombinations';
-
-const MOCK_ERR_MSG = 'MOCK_ERR_MSG';
-const MOCK_ERR_NUM_CODE = 123;
-const MOCK_ERR_CAUSE_ERR = new Error('MOCK_ERR_CAUSE_ERR');
-const MOCK_ERR_CAUSE_STR = 'MOCK_ERR_CAUSE_STR';
-const MOCK_ERR_CODE = 'MOCK_ERR_CODE';
-const MOCK_ERR_CODE_CTR_ARG = { code: MOCK_ERR_CODE };
+import { GExceptionV0 } from '../../src/GExceptionV0';
+import {
+  MOCK_ERR_CAUSE_ERR,
+  MOCK_ERR_CAUSE_STR,
+  MOCK_ERR_CODE,
+  MOCK_ERR_CODE_CTR_ARG,
+  MOCK_ERR_MSG,
+  MOCK_ERR_NUM_CODE,
+} from '../lib/mock-values';
 
 beforeAll(() => {
   GExceptionV0.mergeConfig({
@@ -21,15 +21,6 @@ afterAll(() => {
 });
 
 describe('GException constructor: valid', function () {
-  test('[]', () => {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    const e = new GExceptionV0();
-    expect(e.getMessage()).toMatchInlineSnapshot(
-      `"GExceptionV0 constructor problem: Initialized with 0 arguments"`,
-    );
-  });
-
   test('[string]', () => {
     const e = new GExceptionV0(MOCK_ERR_MSG);
     expect(e.getMessage()).toBe(MOCK_ERR_MSG);
@@ -142,6 +133,15 @@ describe('GException constructor: valid', function () {
 });
 
 describe('GException constructor: invalid', function () {
+  test('Backup parsing: []', () => {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    const e = new GExceptionV0();
+    expect(e.getMessage()).toMatchInlineSnapshot(
+      `"GExceptionV0 constructor problem: Initialized with 0 arguments"`,
+    );
+  });
+
   test('Backup parsing: [number, number]', () => {
     const e = new GExceptionV0(1, 2);
     expect(e.getMessage()).toMatchInlineSnapshot(`
@@ -265,7 +265,7 @@ describe('GException constructor: invalid', function () {
     const EXPECTED_CODE = 2;
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
-    const e = new GExceptionV0(
+    const e = GExceptionV0.new(
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
       { unknownProp: 13 },
@@ -399,47 +399,5 @@ describe('GException constructor: invalid', function () {
         },
       }
     `);
-  });
-});
-
-describe('GException constructor: generated tables', () => {
-  test('Table 1', () => {
-    const { tableString } = evalConstructorArgumentsCombinations({
-      'number': 123,
-      'string': 'mock_str',
-      'object': {},
-      'else': [],
-    });
-    expect(tableString).toMatchSnapshot();
-  });
-
-  test('Table 2', () => {
-    const { tableString } = evalConstructorArgumentsCombinations({
-      'number': 123,
-      'string': 'mock_str',
-      'object': new Date('2022-07-13T11:12:25.741Z'),
-      'else': true,
-    });
-    expect(tableString).toMatchSnapshot();
-  });
-
-  test('Table 3', () => {
-    const { tableString } = evalConstructorArgumentsCombinations({
-      'number': 123,
-      'string': 'mock_str',
-      'object': new Error(),
-      'else': null,
-    });
-    expect(tableString).toMatchSnapshot();
-  });
-
-  test('Table 4', () => {
-    const { tableString } = evalConstructorArgumentsCombinations({
-      'number': 123,
-      'string': 'mock_str',
-      'object': new GExceptionV0('test'),
-      'else': undefined,
-    });
-    expect(tableString).toMatchSnapshot();
   });
 });

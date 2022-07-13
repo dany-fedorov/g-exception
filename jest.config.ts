@@ -6,6 +6,7 @@ const config: Config.InitialOptions = {
   transform: {
     '^.+\\.ts?$': 'ts-jest',
   },
+  testRegex: '/__tests__/.*.test(\\..+)?\\.ts$',
 };
 
 export default config;
