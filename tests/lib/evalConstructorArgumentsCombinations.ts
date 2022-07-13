@@ -1,84 +1,123 @@
-import { GException } from '../../src';
+import { GExceptionV0 } from '../../src';
 
-function mkCombinations(values: string[]): string[][] {
-  return values.flatMap((v0) => {
-    return values.flatMap((v1) => {
-      return values.map((v2) => {
-        return [v0, v1, v2];
+const NO_ARG = Symbol('NO_ARG');
+
+function mkCombinations(
+  valuesInput: string[],
+): ((string | symbol)[] | string[])[] {
+  const values = [...valuesInput, NO_ARG];
+  return values
+    .flatMap((v0) => {
+      return values.flatMap((v1) => {
+        return values.map((v2) => {
+          return [v0, v1, v2];
+        });
       });
+    })
+    .filter((combo) => {
+      const [a1, a2, a3] = combo;
+      return (
+        (a1 !== NO_ARG && a2 !== NO_ARG && a3 !== NO_ARG) ||
+        (a1 !== NO_ARG && a2 !== NO_ARG && a3 === NO_ARG) ||
+        (a1 !== NO_ARG && a2 === NO_ARG && a3 === NO_ARG) ||
+        (a1 === NO_ARG && a2 === NO_ARG && a3 === NO_ARG)
+      );
     });
-  });
 }
 
 enum TypeClass {
   STRING = 'string',
   NUMBER = 'number',
-  UNKNOWN = 'unknown',
-  NOT_NUMBER = '!number',
-  NOT_NUMBER_NOT_STRING = '!number & !string',
+  OBJECT = 'object',
+  NOT_NUMBER_NOT_STRING_NOT_OBJECT = 'else',
 }
 
 type TranslateConfig = {
-  [TypeClass.STRING]?: string;
-  [TypeClass.NUMBER]?: number;
-  [TypeClass.UNKNOWN]: unknown;
-  [TypeClass.NOT_NUMBER]: unknown;
-  [TypeClass.NOT_NUMBER_NOT_STRING]: unknown;
+  [TypeClass.STRING]: string;
+  [TypeClass.NUMBER]: number;
+  [TypeClass.OBJECT]: object;
+  [TypeClass.NOT_NUMBER_NOT_STRING_NOT_OBJECT]: unknown;
 };
 
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
 function translate(tc: TypeClass, config: TranslateConfig): unknown {
-  switch (tc) {
-    case TypeClass.STRING:
-      return config[tc] || 'mock_str';
-    case TypeClass.NUMBER:
-      return config[tc] || 123;
-    case TypeClass.UNKNOWN:
-      return config[tc] || {};
-    case TypeClass.NOT_NUMBER:
-      return config[tc] || {};
-    case TypeClass.NOT_NUMBER_NOT_STRING:
-      return config[tc] || {};
-  }
+  return config[tc];
 }
 
 const COL_WIDTH = 20;
 const COL_SEP = ' | ';
 
-export function evalConstructorArgumentsCombinations(
-  config: TranslateConfig,
-): string {
+const TABLE_DELIM = Array.from({ length: COL_WIDTH * 5 + COL_SEP.length * 3 })
+  .map((_x) => '-')
+  .join('');
+
+const NO_ARG_TEXT_REPRESENTATION = '--';
+
+export function evalConstructorArgumentsCombinations(config: TranslateConfig): {
+  tableString: string;
+} {
   const combinations = mkCombinations(Object.values(TypeClass)).map((combo) => {
-    GException.mergeConfig({ logConstructorProblems: false });
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    const e = new GException(...combo.map((c) => translate(c, config)));
-    return { combo, hadConstructorProblems: e.hadConstructorProblems() };
+    const e = new GExceptionV0(
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      ...combo.filter((c) => c !== NO_ARG).map((c) => translate(c, config)),
+    );
+    return { combo, hadConstructorFirstArgsProblems: e.hadConstructorFirstArgsProblems() };
   });
-  const valid: string[] = [];
-  const invalid: string[] = [];
-  combinations.forEach((r) => {
-    const row = [r.hadConstructorProblems ? 'invalid' : 'valid', ...r.combo]
-      .map((a) => a.padEnd(COL_WIDTH, ' '))
+  const validRows: string[] = [];
+  const invalidRows: string[] = [];
+  combinations.forEach((r, combinationIndex) => {
+    const row1 = [
+      r.hadConstructorFirstArgsProblems ? 'invalid' : 'valid',
+      combinationIndex,
+      ...r.combo,
+    ]
+      .map((a) =>
+        String(a === NO_ARG ? NO_ARG_TEXT_REPRESENTATION : a).padEnd(
+          COL_WIDTH,
+          ' ',
+        ),
+      )
       .join(COL_SEP);
-    if (r.hadConstructorProblems) {
-      invalid.push(row);
+    const row2 = [
+      r.hadConstructorFirstArgsProblems ? 'invalid' : 'valid',
+      combinationIndex,
+      ...r.combo.map((c) =>
+        c === NO_ARG
+          ? NO_ARG_TEXT_REPRESENTATION
+          : translate(c as TypeClass, config),
+      ),
+    ]
+      .map((a) => String(a).padEnd(COL_WIDTH, ' '))
+      .join(COL_SEP);
+    if (r.hadConstructorFirstArgsProblems) {
+      invalidRows.push(row1);
+      invalidRows.push(row2);
+      invalidRows.push(TABLE_DELIM);
     } else {
-      valid.push(row);
+      validRows.push(row1);
+      validRows.push(row2);
+      validRows.push(TABLE_DELIM);
     }
   });
-  const delim = Array.from({ length: COL_WIDTH * 4 + COL_SEP.length * 3 })
-    .map((_x) => '-')
-    .join('');
-  const resTable = [
-    delim,
-    ...invalid,
-    delim,
-    ...valid,
-    delim,
-    `valid:   ${valid.length} / ${combinations.length}`,
-    `invalid: ${invalid.length} / ${combinations.length}`,
+  const invalidReport = `invalid: ${invalidRows.length / 3} / ${
+    combinations.length
+  }`;
+  const validReport = `valid:   ${validRows.length / 3} / ${
+    combinations.length
+  }`;
+  const tableString = [
+    'Translate Config:',
+    JSON.stringify(config),
+    TABLE_DELIM,
+    invalidReport,
+    validReport,
+    TABLE_DELIM,
+    ...invalidRows,
+    TABLE_DELIM,
+    ...validRows,
+    TABLE_DELIM,
+    invalidReport,
+    validReport,
   ].join('\n');
-  return resTable;
+  return { tableString };
 }

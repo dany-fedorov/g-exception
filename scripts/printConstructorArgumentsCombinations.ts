@@ -2,8 +2,9 @@ import { evalConstructorArgumentsCombinations } from '../tests/lib/evalConstruct
 
 console.log(
   evalConstructorArgumentsCombinations({
-    'unknown': {},
-    '!number': {},
-    '!number & !string': {},
-  }),
+    'number': 123,
+    'string': 'mock_str',
+    'object': {},
+    'else': [],
+  }).tableString,
 );
