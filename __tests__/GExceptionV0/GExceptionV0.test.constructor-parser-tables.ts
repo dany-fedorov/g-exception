@@ -3,13 +3,13 @@ import { evalConstructorArgumentsCombinations } from '../lib/evalConstructorArgu
 
 beforeAll(() => {
   GExceptionV0.mergeConfig({
-    logConstructorProblems: false,
+    logProblemsToStdout: false,
   });
 });
 
 afterAll(() => {
   GExceptionV0.mergeConfig({
-    logConstructorProblems: true,
+    logProblemsToStdout: true,
   });
 });
 

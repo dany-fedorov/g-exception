@@ -10,13 +10,13 @@ import {
 
 beforeAll(() => {
   GExceptionV0.mergeConfig({
-    logConstructorProblems: false,
+    logProblemsToStdout: false,
   });
 });
 
 afterAll(() => {
   GExceptionV0.mergeConfig({
-    logConstructorProblems: true,
+    logProblemsToStdout: true,
   });
 });
 
@@ -151,7 +151,7 @@ describe('GException constructor: invalid', function () {
     `);
     expect(e.getInfo()).toMatchInlineSnapshot(`
       Object {
-        "G_EXCEPTION_CONSTRUCTOR_PROBLEMS": Object {
+        "G_EXCEPTION_PROBLEMS": Object {
           "firstArgsProblems": Array [
             1,
             2,
@@ -171,7 +171,7 @@ describe('GException constructor: invalid', function () {
     `);
     expect(e.getInfo()).toMatchInlineSnapshot(`
       Object {
-        "G_EXCEPTION_CONSTRUCTOR_PROBLEMS": Object {
+        "G_EXCEPTION_PROBLEMS": Object {
           "firstArgsProblems": Array [
             1,
             2,
@@ -192,7 +192,7 @@ describe('GException constructor: invalid', function () {
     `);
     expect(e.getInfo()).toMatchInlineSnapshot(`
       Object {
-        "G_EXCEPTION_CONSTRUCTOR_PROBLEMS": Object {
+        "G_EXCEPTION_PROBLEMS": Object {
           "firstArgsProblems": Array [
             1,
             2,
@@ -211,7 +211,7 @@ describe('GException constructor: invalid', function () {
     expect(e.getMessage()).toMatchInlineSnapshot(`"str1"`);
     expect(e.getInfo()).toMatchInlineSnapshot(`
       Object {
-        "G_EXCEPTION_CONSTRUCTOR_PROBLEMS": Object {
+        "G_EXCEPTION_PROBLEMS": Object {
           "restArgsProblems": Array [
             Object {
               "argumentNumber": 3,
@@ -243,7 +243,7 @@ describe('GException constructor: invalid', function () {
     `);
     expect(e.getInfo()).toMatchInlineSnapshot(`
       Object {
-        "G_EXCEPTION_CONSTRUCTOR_PROBLEMS": Object {
+        "G_EXCEPTION_PROBLEMS": Object {
           "firstArgsProblems": Array [
             Object {
               "numCode": 2,
@@ -284,7 +284,7 @@ describe('GException constructor: invalid', function () {
     `);
     expect(e.getInfo()).toMatchInlineSnapshot(`
       Object {
-        "G_EXCEPTION_CONSTRUCTOR_PROBLEMS": Object {
+        "G_EXCEPTION_PROBLEMS": Object {
           "firstArgsProblems": Array [
             Object {
               "unknownProp": 13,
@@ -323,7 +323,7 @@ describe('GException constructor: invalid', function () {
     );
     expect(e.getInfo()).toMatchInlineSnapshot(`
       Object {
-        "G_EXCEPTION_CONSTRUCTOR_PROBLEMS": Object {
+        "G_EXCEPTION_PROBLEMS": Object {
           "firstArgsProblems": Array [
             Array [],
           ],
@@ -343,7 +343,7 @@ describe('GException constructor: invalid', function () {
     `);
     expect(e.getInfo()).toMatchInlineSnapshot(`
       Object {
-        "G_EXCEPTION_CONSTRUCTOR_PROBLEMS": Object {
+        "G_EXCEPTION_PROBLEMS": Object {
           "firstArgsProblems": Array [
             Array [],
             Array [
@@ -372,7 +372,7 @@ describe('GException constructor: invalid', function () {
     expect(e.getCode()).toBe(MOCK_ERR_CODE);
     expect(e.getInfo()).toMatchInlineSnapshot(`
       Object {
-        "G_EXCEPTION_CONSTRUCTOR_PROBLEMS": Object {
+        "G_EXCEPTION_PROBLEMS": Object {
           "invalidKeyProblems": Array [
             Object {
               "argumentNumber": 4,

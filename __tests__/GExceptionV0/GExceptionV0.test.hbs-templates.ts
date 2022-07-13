@@ -9,15 +9,16 @@ import {
 
 beforeAll(() => {
   GExceptionV0.mergeConfig({
-    logConstructorProblems: false,
+    logProblemsToStdout: false,
   });
 });
 
 afterAll(() => {
   GExceptionV0.mergeConfig({
-    logConstructorProblems: true,
+    logProblemsToStdout: true,
   });
 });
+
 const TEMPLATE = [
   `double braces / code:                 ${GExceptionV0.t.code}`,
   `double braces / numCode:              ${GExceptionV0.t.numCode}`,
@@ -86,7 +87,7 @@ const configure = (e: GExceptionV0): GExceptionV0 => {
     .setInfoProp('prop4', { prop44: ['value of info.prop4.prop44[0]'] });
 };
 
-function removeStackEntries(s: string | undefined): string | undefined {
+function removeStacktraceEntries(s: string | undefined): string | undefined {
   if (!s) {
     return s;
   }
@@ -98,7 +99,9 @@ describe('Message templating', () => {
     const message = `<message>\n${TEMPLATE}\n</message>`;
     const e1 = configure(GExceptionV0.new(message));
     expect(e1.getMessage()).toMatchSnapshot('message:message');
-    expect(removeStackEntries(e1.getStack())).toMatchSnapshot('message:stack');
+    expect(removeStacktraceEntries(e1.getStack())).toMatchSnapshot(
+      'message:stack',
+    );
     const displayMessage = `<displayMessage>\n${TEMPLATE}\n</displayMessage>`;
     const e2 = configure(GExceptionV0.new(MOCK_ERR_MSG)).setDisplayMessage(
       displayMessage,
@@ -106,12 +109,133 @@ describe('Message templating', () => {
     expect(e2.getDisplayMessage()).toMatchSnapshot(
       'displayMessage:displayMessage',
     );
-    expect(removeStackEntries(e2.getStack())).toMatchSnapshot(
+    expect(removeStacktraceEntries(e2.getStack())).toMatchSnapshot(
       'displayMessage:stack',
     );
   });
 
-  test('Invalid template', () => {
-    GExceptionV0.from({ message: 'heh{{h}' });
+  test('Invalid template: message', () => {
+    const BAD_TEMPLATE = 'heh{{h}';
+    const e = GExceptionV0.from({
+      message: BAD_TEMPLATE,
+    });
+    expect(e.getMessage()).toBe(BAD_TEMPLATE);
+    expect(e.getMessage()).toBe(BAD_TEMPLATE);
+    expect(e.getMessage()).toBe(BAD_TEMPLATE);
+    expect(e.getProblems()).toMatchInlineSnapshot(`
+      Object {
+        "handlebarsProblems": Array [
+          Object {
+            "caught": [Error: Parse error on line 1:
+      heh{{h}
+      ------^
+      Expecting 'CLOSE_RAW_BLOCK', 'CLOSE', 'CLOSE_UNESCAPED', 'OPEN_SEXPR', 'CLOSE_SEXPR', 'ID', 'OPEN_BLOCK_PARAMS', 'STRING', 'NUMBER', 'BOOLEAN', 'UNDEFINED', 'NULL', 'DATA', 'SEP', got 'INVALID'],
+            "template": "heh{{h}",
+            "templatePropName": "message",
+          },
+        ],
+      }
+    `);
+  });
+
+  test('Invalid template: displayMessage', () => {
+    const BAD_TEMPLATE = 'heh{{h}';
+    const e = GExceptionV0.from({
+      message: MOCK_ERR_MSG,
+      displayMessage: BAD_TEMPLATE,
+    });
+    expect(e.getDisplayMessage()).toBe(BAD_TEMPLATE);
+    expect(e.getDisplayMessage()).toBe(BAD_TEMPLATE);
+    expect(e.getDisplayMessage()).toBe(BAD_TEMPLATE);
+    expect(e.getProblems()).toMatchInlineSnapshot(`
+      Object {
+        "handlebarsProblems": Array [
+          Object {
+            "caught": [Error: Parse error on line 1:
+      heh{{h}
+      ------^
+      Expecting 'CLOSE_RAW_BLOCK', 'CLOSE', 'CLOSE_UNESCAPED', 'OPEN_SEXPR', 'CLOSE_SEXPR', 'ID', 'OPEN_BLOCK_PARAMS', 'STRING', 'NUMBER', 'BOOLEAN', 'UNDEFINED', 'NULL', 'DATA', 'SEP', got 'INVALID'],
+            "template": "heh{{h}",
+            "templatePropName": "displayMessage",
+          },
+        ],
+      }
+    `);
+  });
+
+  test('Invalid template: stack', () => {
+    const BAD_TEMPLATE = 'heh{{h}';
+    const e = GExceptionV0.from({
+      message: BAD_TEMPLATE,
+    });
+    expect(removeStacktraceEntries(e.getStack())).toMatchInlineSnapshot(`
+      "Error: heh{{h}
+          at
+          at
+          at
+          at
+          at
+          at
+          at
+          at
+          at
+          at"
+    `);
+    expect(removeStacktraceEntries(e.getStack())).toMatchInlineSnapshot(`
+      "Error: heh{{h}
+          at
+          at
+          at
+          at
+          at
+          at
+          at
+          at
+          at
+          at"
+    `);
+    expect(removeStacktraceEntries(e.getStack())).toMatchInlineSnapshot(`
+      "Error: heh{{h}
+          at
+          at
+          at
+          at
+          at
+          at
+          at
+          at
+          at
+          at"
+    `);
+    expect({
+      ...e.getProblems(),
+      handlebarsProblems: e.getProblems()?.handlebarsProblems?.map((p) => ({
+        ...p,
+        template: removeStacktraceEntries(p.template),
+      })),
+    }).toMatchInlineSnapshot(`
+      Object {
+        "handlebarsProblems": Array [
+          Object {
+            "caught": [Error: Parse error on line 1:
+      Error: heh{{h}    at Function.fr
+      -------------^
+      Expecting 'CLOSE_RAW_BLOCK', 'CLOSE', 'CLOSE_UNESCAPED', 'OPEN_SEXPR', 'CLOSE_SEXPR', 'ID', 'OPEN_BLOCK_PARAMS', 'STRING', 'NUMBER', 'BOOLEAN', 'UNDEFINED', 'NULL', 'DATA', 'SEP', got 'INVALID'],
+            "template": "Error: heh{{h}
+          at
+          at
+          at
+          at
+          at
+          at
+          at
+          at
+          at
+          at",
+            "templatePropName": "stack",
+          },
+        ],
+      }
+    `);
   });
 });

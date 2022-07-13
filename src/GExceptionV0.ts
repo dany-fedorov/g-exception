@@ -10,12 +10,13 @@ export function toArray<T>(x: T | T[]): T[] {
 }
 
 const G_EXCEPTION_CLASS_NAME = Symbol('CLASS_NAME');
-const G_EXCEPTION_OWN_PROPS = Symbol('OWN_PROPS');
+const G_EXCEPTION_OWN_PUBLIC_PROPS = Symbol('OWN_PUBLIC_PROPS');
+const G_EXCEPTION_OWN_PRIVATE_PROPS = Symbol('OWN_PRIVATE_PROPS');
 const G_EXCEPTION_DERIVED_PROPS = Symbol('DERIVED_PROPS');
 const G_EXCEPTION_EXTENSION_PROPS = Symbol('EXTENSION_PROPS');
 const G_EXCEPTION_STATIC_CONFIG = Symbol('STATIC_CONFIG');
-const G_EXCEPTION_HAD_CONSTRUCTOR_PROBLEMS = Symbol('HAD_CONSTRUCTOR_PROBLEMS');
-const G_EXCEPTION_CONSTRUCTOR_PROBLEMS_INFO_PROP_KEY = Symbol(
+const G_EXCEPTION_HAD_PROBLEMS = Symbol('HAD_PROBLEMS');
+const G_EXCEPTION_PROBLEMS_INFO_PROP_KEY = Symbol(
   'CONSTRUCTOR_PROBLEMS_INFO_PROP_KEY',
 );
 
@@ -58,7 +59,7 @@ const CAUSES_KEY = 'causes';
 const NUM_CODE_KEY = 'numCode';
 const TIMESTAMP_KEY = 'timestamp';
 
-interface GExceptionOwnProps {
+interface GExceptionOwnPublicProps {
   [MESSAGE_KEY]: GExceptionMessage;
   [DISPLAY_MESSAGE_KEY]?: GExceptionDisplayMessageInput;
   [INFO_KEY]?: GExceptionInfo;
@@ -69,7 +70,7 @@ interface GExceptionOwnProps {
   [TIMESTAMP_KEY]?: GExceptionTimestamp;
 }
 
-const OWN_PROPS_KEYS = [
+const OWN_PUBLIC_PROPS_KEYS = [
   MESSAGE_KEY,
   DISPLAY_MESSAGE_KEY,
   INFO_KEY,
@@ -78,7 +79,19 @@ const OWN_PROPS_KEYS = [
   CAUSES_KEY,
   NUM_CODE_KEY,
   TIMESTAMP_KEY,
-] as unknown as Array<keyof GExceptionOwnProps>;
+] as unknown as Array<keyof GExceptionOwnPublicProps>;
+
+const CONFIG_KEY = 'config';
+
+interface GExceptionOwnPrivateProps {
+  [CONFIG_KEY]?: Partial<GExceptionConfig>;
+}
+
+const OWN_PRIVATE_PROPS_KEYS = [CONFIG_KEY] as unknown as Array<
+  keyof GExceptionOwnPrivateProps
+>;
+
+type GExceptionOwnProps = GExceptionOwnPublicProps & GExceptionOwnPrivateProps;
 
 type GExceptionTemplateHelpers_CausesKey = {
   (index?: number): string;
@@ -103,7 +116,7 @@ interface GExceptionTemplateHelpers {
 
 function mkTemplateHelpersConstant(triple: boolean) {
   return Object.fromEntries(
-    OWN_PROPS_KEYS.flatMap((k) => {
+    OWN_PUBLIC_PROPS_KEYS.flatMap((k) => {
       if ([INFO_KEY, CAUSES_KEY].includes(k)) {
         return [];
       }
@@ -171,10 +184,17 @@ interface GExceptionConstructorArgumentsParsed {
   argsTaken: number;
 }
 
-interface GExceptionConstructorProblemsReport {
+interface GExceptionHandlebarsProblem {
+  templatePropName: string;
+  template: string;
+  caught: unknown;
+}
+
+interface GExceptionProblemsReport {
   firstArgsProblems?: unknown[];
   restArgsProblems?: GExceptionConstructorArgumentProblem[];
   invalidKeyProblems?: GExceptionConstructorArgumentInvalidKeyProblem[];
+  handlebarsProblems?: GExceptionHandlebarsProblem[];
 }
 
 function mkArgTypeReport(x: unknown): string {
@@ -224,7 +244,7 @@ function parseConstructorArgumentsBackup(
   const message = mkConstructorProblemMessage(
     [`Received unexpected ${unexpectedNArguments}`, badArgsReport].join(':'),
   );
-  if (GExceptionV0.getConfig().logConstructorProblems) {
+  if (GExceptionV0.getConfig().logProblemsToStdout) {
     console.warn(message);
   }
   const prependToRest = badArgsToProcess.filter((a) =>
@@ -346,26 +366,26 @@ function mkGEID(nowDate: Date): string {
 }
 
 interface GExceptionConfig {
-  logConstructorProblems: boolean;
-  recordConstructorProblems: boolean;
-  recordConstructorProblemsInfoPropKey: string;
   handlebarsCompilation: boolean;
+  logProblemsToStdout: boolean;
+  problemsInfoPropKey: string;
+  recordConstructorProblems: boolean;
+  recordHandlebarsCompilationProblems: boolean;
 }
 
-const G_EXCEPTION_CONSTRUCTOR_PROBLEMS_INFO_PROP_KEY_DEFAULT =
-  'G_EXCEPTION_CONSTRUCTOR_PROBLEMS';
+const G_EXCEPTION_PROBLEMS_INFO_PROP_KEY_DEFAULT = 'G_EXCEPTION_PROBLEMS';
 const G_EXCEPTION_DEFAULT_CONFIG: GExceptionConfig = {
-  logConstructorProblems: true,
-  recordConstructorProblems: true,
-  recordConstructorProblemsInfoPropKey:
-    G_EXCEPTION_CONSTRUCTOR_PROBLEMS_INFO_PROP_KEY_DEFAULT,
   handlebarsCompilation: true,
+  logProblemsToStdout: true,
+  problemsInfoPropKey: G_EXCEPTION_PROBLEMS_INFO_PROP_KEY_DEFAULT,
+  recordConstructorProblems: true,
+  recordHandlebarsCompilationProblems: true,
 };
 
 interface GExceptionConstructorArgumentProblem {
   argumentNumber: number;
   problemReason: unknown;
-  problemValueCaught?: unknown;
+  caught?: unknown;
   argumentValue: unknown;
 }
 
@@ -403,6 +423,292 @@ const HBS_HELPERS = {
   },
 };
 
+function logProblem(self: GExceptionV0, message: string) {
+  if (self.getEffectiveConfig().logProblemsToStdout) {
+    console.warn(message);
+  }
+}
+
+function isAllowedOwnPublicPropName(propName: string): boolean {
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  return GExceptionV0.OWN_PUBLIC_PROPS_KEYS.includes(propName);
+}
+
+function isAllowedOwnPrivatePropName(propName: string): boolean {
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  return GExceptionV0.OWN_PRIVATE_PROPS_KEYS.includes(propName);
+}
+
+function initCauses(self: GExceptionV0, causes?: GExceptionCauses) {
+  if (causes !== undefined) {
+    self.setCauses(causes);
+  }
+}
+
+function initNumCode(self: GExceptionV0, numCode?: number) {
+  if (numCode !== undefined) {
+    self.setNumCode(numCode);
+  }
+}
+
+function handleInvalidKeyForExceptionPropDuringConstructor<
+  K extends keyof GExceptionOwnProps,
+>(
+  self: GExceptionV0,
+  propName: K,
+  propValue: GExceptionOwnProps[K],
+  argumentNumber: number,
+  totalArgsNumber: number,
+): GExceptionV0 {
+  self[G_EXCEPTION_HAD_PROBLEMS] = true;
+  const problemsPropKey = getProblemsInfoPropKey(self);
+  if (typeof problemsPropKey !== 'string') {
+    return self;
+  }
+  const problemsReport = (self.getProblems() || {}) as GExceptionProblemsReport;
+  const problemReason = mkConstructorProblemMessage(
+    `Unexpected key in object argument ${argumentNumber} (of total ${totalArgsNumber}): ${propName} = ${propValue}`,
+  );
+  logProblem(self, problemReason);
+  const newProblemsReport: GExceptionProblemsReport = {
+    ...problemsReport,
+    invalidKeyProblems: [
+      ...(!problemsReport.invalidKeyProblems
+        ? []
+        : (problemsReport.invalidKeyProblems as GExceptionConstructorArgumentInvalidKeyProblem[])),
+      {
+        key: propName,
+        value: propValue,
+        argumentNumber,
+        problemReason,
+      },
+    ],
+  };
+  self.setInfoProp(problemsPropKey, newProblemsReport);
+  return self;
+}
+
+function setExceptionPropForConstructor<K extends keyof GExceptionOwnProps>(
+  self: GExceptionV0,
+  propName: K,
+  propValue: GExceptionOwnProps[K],
+  argumentNumber: number,
+  totalArgsNumber: number,
+): GExceptionV0 {
+  const obj = getObjForPropName(self, propName);
+  if (obj === undefined) {
+    handleInvalidKeyForExceptionPropDuringConstructor<K>(
+      self,
+      propName,
+      propValue,
+      argumentNumber,
+      totalArgsNumber,
+    );
+    return self;
+  }
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  obj[propName] = propValue;
+  return self;
+}
+
+function initFromArguments(
+  self: GExceptionV0,
+  restArgs: GExceptionConstructorNthArgument[],
+  argsTaken: number,
+): GExceptionConstructorArgumentProblem[] {
+  const problems: GExceptionConstructorArgumentProblem[] = [];
+
+  function pushProblem(
+    message: string,
+    p: GExceptionConstructorArgumentProblem,
+  ) {
+    logProblem(self, message);
+    problems.push(p);
+  }
+
+  restArgs.forEach((arg, i) => {
+    const n = i + argsTaken + 1;
+    const sfx = getSfx(n);
+    const totalArgsN = restArgs.length + argsTaken;
+    try {
+      if (!isPotentialNthArgument(arg)) {
+        const argType = mkArgTypeReport(arg);
+        const message = mkConstructorProblemMessage(
+          `Unexpected type of ${n}${sfx} argument (of total ${totalArgsN}): ${argType}`,
+        );
+        pushProblem(message, {
+          argumentNumber: n,
+          argumentValue: arg,
+          problemReason: message,
+        });
+        return;
+      }
+
+      for (const k in arg) {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        const v = arg[k];
+        if (k === GExceptionV0.INFO_KEY) {
+          self.mergeIntoInfo(v as GExceptionInfo);
+        } else {
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          setExceptionPropForConstructor(self, k, v, n, totalArgsN);
+        }
+      }
+    } catch (caught) {
+      const message = mkConstructorProblemMessage(
+        `Problem processing ${n}${sfx} argument (of total ${totalArgsN}): ${caught}`,
+      );
+      pushProblem(message, {
+        argumentNumber: n,
+        argumentValue: arg,
+        problemReason: message,
+        caught,
+      });
+    }
+  });
+  return problems;
+}
+
+function getProblemsInfoPropKey(self: GExceptionV0): string | null {
+  if (self[G_EXCEPTION_PROBLEMS_INFO_PROP_KEY] == null) {
+    const problemsPropKey = self.getEffectiveConfig().problemsInfoPropKey;
+    if (typeof problemsPropKey !== 'string') {
+      return self[G_EXCEPTION_PROBLEMS_INFO_PROP_KEY];
+    }
+    self[G_EXCEPTION_PROBLEMS_INFO_PROP_KEY] = problemsPropKey;
+  }
+  return self[G_EXCEPTION_PROBLEMS_INFO_PROP_KEY];
+}
+
+function recordConstructorProblems(
+  self: GExceptionV0,
+  hadConstructorFirstArgsProblems: boolean,
+  firstArgsProblems: unknown[],
+  restArgsProblems: GExceptionConstructorArgumentProblem[],
+) {
+  const hadProblems =
+    hadConstructorFirstArgsProblems ||
+    firstArgsProblems.length !== 0 ||
+    restArgsProblems.length !== 0;
+  if (!hadProblems) {
+    return;
+  }
+  self[G_EXCEPTION_HAD_PROBLEMS] = hadProblems;
+  if (!self.getEffectiveConfig().recordConstructorProblems) {
+    return;
+  }
+  const problemsPropKey = getProblemsInfoPropKey(self);
+  if (typeof problemsPropKey !== 'string') {
+    return;
+  }
+  const problemsReport = (self.getProblems() || {}) as GExceptionProblemsReport;
+  const newProblemsReport: GExceptionProblemsReport = {
+    ...problemsReport,
+    ...(firstArgsProblems.length === 0 ? {} : { firstArgsProblems }),
+    ...(restArgsProblems.length === 0 ? {} : { restArgsProblems }),
+  };
+  self.setInfoProp(problemsPropKey, newProblemsReport);
+}
+
+function initTimestamp(self: GExceptionV0, nowDate: Date) {
+  if (self.getTimestamp() === undefined) {
+    self.setTimestamp(nowDate.toISOString());
+  }
+}
+
+function initId(self: GExceptionV0, nowDate: Date) {
+  if (self.getId() === undefined) {
+    self.setId(mkGEID(nowDate));
+  }
+}
+
+function getTemplateCompilationContext(
+  self: GExceptionV0,
+): Record<string, unknown> {
+  const extensionProps =
+    self[G_EXCEPTION_EXTENSION_PROPS] === null
+      ? {}
+      : self[G_EXCEPTION_EXTENSION_PROPS];
+  return {
+    ...extensionProps,
+    ...self[G_EXCEPTION_OWN_PUBLIC_PROPS],
+  };
+}
+
+function compileTemplate(
+  self: GExceptionV0,
+  template: string,
+  templatePropName: string,
+): string {
+  try {
+    if (!self.getEffectiveConfig().handlebarsCompilation) {
+      return template;
+    }
+    return hbs.compile(template)(getTemplateCompilationContext(self), {
+      helpers: HBS_HELPERS,
+    });
+  } catch (caught) {
+    self[G_EXCEPTION_HAD_PROBLEMS] = true;
+    const message = mkConstructorProblemMessage(
+      [
+        `Problem during handlebars compilation of template "${templatePropName}"`,
+        `- template: ${template}`,
+        `- caught: ${caught}`,
+      ].join('\n'),
+    );
+    logProblem(self, message);
+    if (self.getEffectiveConfig().recordHandlebarsCompilationProblems) {
+      const problemsPropKey = getProblemsInfoPropKey(self);
+      if (typeof problemsPropKey === 'string') {
+        const problemsReport = (self.getProblems() ||
+          {}) as GExceptionProblemsReport;
+        const newProblemsReport: GExceptionProblemsReport = {
+          ...problemsReport,
+          handlebarsProblems: [
+            ...(!problemsReport.handlebarsProblems
+              ? []
+              : problemsReport.handlebarsProblems),
+            {
+              templatePropName,
+              template,
+              caught,
+            },
+          ],
+        };
+        self.setInfoProp(problemsPropKey, newProblemsReport);
+      }
+    }
+    return template;
+  }
+}
+
+function getObjForPropName<K extends keyof GExceptionOwnProps>(
+  self: GExceptionV0,
+  propName: K,
+): K extends keyof GExceptionOwnProps
+  ? GExceptionOwnProps
+  : K extends keyof GExceptionOwnPrivateProps
+  ? GExceptionOwnPrivateProps
+  : undefined {
+  if (isAllowedOwnPublicPropName(propName)) {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    return self[G_EXCEPTION_OWN_PUBLIC_PROPS];
+  } else if (isAllowedOwnPrivatePropName(propName)) {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    return self[G_EXCEPTION_OWN_PRIVATE_PROPS];
+  }
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  return undefined;
+}
+
 export class GExceptionV0<
   ExtensionProps extends GExceptionDefaultExtensionProps = GExceptionDefaultExtensionProps,
 > extends Error {
@@ -419,7 +725,11 @@ export class GExceptionV0<
   static readonly NUM_CODE_KEY = NUM_CODE_KEY;
   static readonly TIMESTAMP_KEY = TIMESTAMP_KEY;
 
-  static readonly OWN_PROPS_KEYS = OWN_PROPS_KEYS;
+  static readonly OWN_PUBLIC_PROPS_KEYS = OWN_PUBLIC_PROPS_KEYS;
+
+  static readonly CONFIG_KEY = CONFIG_KEY;
+
+  static readonly OWN_PRIVATE_PROPS_KEYS = OWN_PRIVATE_PROPS_KEYS;
 
   /**
    * Templating helpers
@@ -447,154 +757,21 @@ export class GExceptionV0<
     return GExceptionV0[G_EXCEPTION_STATIC_CONFIG];
   }
 
-  private static _logConstructorProblem(message: string) {
-    if (GExceptionV0.getConfig().logConstructorProblems) {
-      console.warn(message);
-    }
-  }
-
   /**
    * Private Fields
    */
 
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
   private readonly [G_EXCEPTION_CLASS_NAME]: string;
-  private readonly [G_EXCEPTION_OWN_PROPS]: GExceptionOwnProps;
+  private readonly [G_EXCEPTION_OWN_PUBLIC_PROPS]: GExceptionOwnPublicProps;
+  private readonly [G_EXCEPTION_OWN_PRIVATE_PROPS]: GExceptionOwnPrivateProps;
   private readonly [G_EXCEPTION_DERIVED_PROPS]: GExceptionDerivedProps;
   private [G_EXCEPTION_EXTENSION_PROPS]: ExtensionProps | null;
-  private [G_EXCEPTION_CONSTRUCTOR_PROBLEMS_INFO_PROP_KEY]: string | null =
-    null;
-  private [G_EXCEPTION_HAD_CONSTRUCTOR_PROBLEMS] = false;
+  private [G_EXCEPTION_PROBLEMS_INFO_PROP_KEY]: string | null = null;
+  private [G_EXCEPTION_HAD_PROBLEMS] = false;
 
   /**
-   * Constructor
+   * Constructor Variants
    */
-
-  private _initCauses(causes?: GExceptionCauses) {
-    if (causes !== undefined) {
-      this.setCauses(causes);
-    }
-  }
-
-  private _initNumCode(numCode?: number) {
-    if (numCode !== undefined) {
-      this.setNumCode(numCode);
-    }
-  }
-
-  private _initFromArguments(
-    restArgs: GExceptionConstructorNthArgument[],
-    argsTaken: number,
-  ): GExceptionConstructorArgumentProblem[] {
-    const problems: GExceptionConstructorArgumentProblem[] = [];
-
-    function pushProblem(
-      message: string,
-      p: GExceptionConstructorArgumentProblem,
-    ) {
-      GExceptionV0._logConstructorProblem(message);
-      problems.push(p);
-    }
-
-    restArgs.forEach((arg, i) => {
-      const n = i + argsTaken + 1;
-      const sfx = getSfx(n);
-      const totalArgsN = restArgs.length + argsTaken;
-      try {
-        if (!isPotentialNthArgument(arg)) {
-          const argType = mkArgTypeReport(arg);
-          const message = mkConstructorProblemMessage(
-            `Unexpected type of ${n}${sfx} argument (of total ${totalArgsN}): ${argType}`,
-          );
-          pushProblem(message, {
-            argumentNumber: n,
-            argumentValue: arg,
-            problemReason: message,
-          });
-          return;
-        }
-
-        for (const k in arg) {
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-          // @ts-ignore
-          const v = arg[k];
-          if (k === GExceptionV0.INFO_KEY) {
-            this.mergeIntoInfo(v as GExceptionInfo);
-          } else {
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
-            this._setErrPropForConstructor(k, v, n, totalArgsN);
-          }
-        }
-      } catch (err) {
-        const message = mkConstructorProblemMessage(
-          `Caught error processing ${n}${sfx} argument (of total ${totalArgsN}): ${err}`,
-        );
-        pushProblem(message, {
-          argumentNumber: n,
-          argumentValue: arg,
-          problemReason: message,
-          problemValueCaught: err,
-        });
-      }
-    });
-    return problems;
-  }
-
-  private _getProblemsInfoPropKey(): string | null {
-    if (this[G_EXCEPTION_CONSTRUCTOR_PROBLEMS_INFO_PROP_KEY] == null) {
-      const problemsPropKey =
-        GExceptionV0.getConfig().recordConstructorProblemsInfoPropKey;
-      if (typeof problemsPropKey !== 'string') {
-        return this[G_EXCEPTION_CONSTRUCTOR_PROBLEMS_INFO_PROP_KEY];
-      }
-      this[G_EXCEPTION_CONSTRUCTOR_PROBLEMS_INFO_PROP_KEY] = problemsPropKey;
-    }
-    return this[G_EXCEPTION_CONSTRUCTOR_PROBLEMS_INFO_PROP_KEY];
-  }
-
-  private _recordConstructorProblems(
-    hadConstructorFirstArgsProblems: boolean,
-    firstArgsProblems: unknown[],
-    restArgsProblems: GExceptionConstructorArgumentProblem[],
-  ) {
-    const hadProblems =
-      hadConstructorFirstArgsProblems ||
-      firstArgsProblems.length !== 0 ||
-      restArgsProblems.length !== 0;
-    if (!hadProblems) {
-      return;
-    }
-    this[G_EXCEPTION_HAD_CONSTRUCTOR_PROBLEMS] = hadProblems;
-    if (!GExceptionV0.getConfig().recordConstructorProblems) {
-      return;
-    }
-    const problemsPropKey = this._getProblemsInfoPropKey();
-    if (typeof problemsPropKey !== 'string') {
-      return;
-    }
-    const problemsReport = (this.getConstructorProblems() ||
-      {}) as GExceptionConstructorProblemsReport;
-    const newProblemsReport: GExceptionConstructorProblemsReport = {
-      ...problemsReport,
-      ...(firstArgsProblems.length === 0 ? {} : { firstArgsProblems }),
-      ...(restArgsProblems.length === 0 ? {} : { restArgsProblems }),
-    };
-    this.setInfoProp(problemsPropKey, newProblemsReport);
-  }
-
-  private _initTimestamp(nowDate: Date) {
-    if (this.getTimestamp() === undefined) {
-      this.setTimestamp(nowDate.toISOString());
-    }
-  }
-
-  private _initId(nowDate: Date) {
-    if (this.getId() === undefined) {
-      this.setId(mkGEID(nowDate));
-    }
-  }
 
   constructor(...constructorArgs: GExceptionConstructorArguments) {
     const nowDate = new Date();
@@ -609,15 +786,17 @@ export class GExceptionV0<
     } = parseConstructorArguments(constructorArgs);
     super(message);
     this[G_EXCEPTION_CLASS_NAME] = Object.getPrototypeOf(this).constructor.name;
-    this[G_EXCEPTION_OWN_PROPS] = { message };
+    this[G_EXCEPTION_OWN_PRIVATE_PROPS] = {};
+    this[G_EXCEPTION_OWN_PUBLIC_PROPS] = { message };
     this[G_EXCEPTION_DERIVED_PROPS] = {};
     this[G_EXCEPTION_EXTENSION_PROPS] = null;
-    this._initCauses(causes);
-    this._initNumCode(numCode);
-    this._initTimestamp(nowDate);
-    this._initId(nowDate);
-    const restArgsProblems = this._initFromArguments(restArgs, argsTaken);
-    this._recordConstructorProblems(
+    initCauses(this, causes);
+    initNumCode(this, numCode);
+    initTimestamp(this, nowDate);
+    initId(this, nowDate);
+    const restArgsProblems = initFromArguments(this, restArgs, argsTaken);
+    recordConstructorProblems(
+      this,
       hadConstructorFirstArgsProblems,
       problematicFirstArgs,
       restArgsProblems,
@@ -633,28 +812,6 @@ export class GExceptionV0<
   }
 
   /**
-   * Template Compilation
-   */
-
-  protected getTemplateCompilationContext(): Record<string, unknown> {
-    return {
-      ...(this[G_EXCEPTION_EXTENSION_PROPS] === null
-        ? {}
-        : this[G_EXCEPTION_EXTENSION_PROPS]),
-      ...this[G_EXCEPTION_OWN_PROPS],
-    };
-  }
-
-  protected compileTemplate(template: string): string {
-    if (!GExceptionV0.getConfig().handlebarsCompilation) {
-      return template;
-    }
-    return hbs.compile(template)(this.getTemplateCompilationContext(), {
-      helpers: HBS_HELPERS,
-    });
-  }
-
-  /**
    * Type Predicates
    */
 
@@ -662,14 +819,14 @@ export class GExceptionV0<
     return (
       typeof obj === 'object' &&
       obj != null &&
-      (obj as any)?.[G_EXCEPTION_CLASS_NAME]
+      typeof (obj as GExceptionV0)?.[G_EXCEPTION_CLASS_NAME] === 'string'
     );
   }
 
   static isExactly(obj: unknown): obj is GExceptionV0 {
     return (
       GExceptionV0.is(obj) &&
-      (obj as any)?.[G_EXCEPTION_CLASS_NAME] === GExceptionV0.name
+      (obj as GExceptionV0)?.[G_EXCEPTION_CLASS_NAME] === GExceptionV0.name
     );
   }
 
@@ -677,69 +834,21 @@ export class GExceptionV0<
    * Getters & Setters
    */
 
-  private _handleInvalidKeyForErrPropDuringContructor<
-    K extends keyof GExceptionOwnProps,
-  >(
+  protected setExceptionProp<K extends keyof GExceptionOwnProps>(
     propName: K,
-    propValue: GExceptionOwnProps[K],
-    argumentNumber: number,
-    totalArgsNumber: number,
-  ) {
-    this[G_EXCEPTION_HAD_CONSTRUCTOR_PROBLEMS] = true;
-    const problemsPropKey = this._getProblemsInfoPropKey();
-    if (typeof problemsPropKey !== 'string') {
+    propValue: K extends keyof GExceptionOwnProps
+      ? GExceptionOwnProps[K]
+      : K extends keyof GExceptionOwnPrivateProps
+      ? GExceptionOwnPrivateProps[K]
+      : unknown,
+  ): this {
+    const obj = getObjForPropName(this, propName);
+    if (obj === undefined) {
       return this;
     }
-    const problemsReport = (this.getConstructorProblems() ||
-      {}) as GExceptionConstructorProblemsReport;
-    const problemReason = mkConstructorProblemMessage(
-      `Unexpected key in object argument ${argumentNumber} (of total ${totalArgsNumber}): ${propName} = ${propValue}`,
-    );
-    GExceptionV0._logConstructorProblem(problemReason);
-    const newProblemsReport: GExceptionConstructorProblemsReport = {
-      ...problemsReport,
-      invalidKeyProblems: [
-        ...(!problemsReport.invalidKeyProblems
-          ? []
-          : (problemsReport.invalidKeyProblems as GExceptionConstructorArgumentInvalidKeyProblem[])),
-        {
-          key: propName,
-          value: propValue,
-          argumentNumber,
-          problemReason,
-        },
-      ],
-    };
-    this.setInfoProp(problemsPropKey, newProblemsReport);
-    return this;
-  }
-
-  private _setErrPropForConstructor<K extends keyof GExceptionOwnProps>(
-    propName: K,
-    propValue: GExceptionOwnProps[K],
-    argumentNumber: number,
-    totalArgsNumber: number,
-  ): this {
-    if (!GExceptionV0.OWN_PROPS_KEYS.includes(propName)) {
-      this._handleInvalidKeyForErrPropDuringContructor<K>(
-        propName,
-        propValue,
-        argumentNumber,
-        totalArgsNumber,
-      );
-    }
-    this[G_EXCEPTION_OWN_PROPS][propName] = propValue;
-    return this;
-  }
-
-  protected setErrProp<K extends keyof GExceptionOwnProps>(
-    propName: K,
-    propValue: GExceptionOwnProps[K],
-  ): this {
-    if (!GExceptionV0.OWN_PROPS_KEYS.includes(propName)) {
-      return this;
-    }
-    this[G_EXCEPTION_OWN_PROPS][propName] = propValue;
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    obj[propName] = propValue;
     return this;
   }
 
@@ -749,15 +858,16 @@ export class GExceptionV0<
     } else {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
-      this[G_EXCEPTION_OWN_PROPS].info[k] = v;
+      this[G_EXCEPTION_OWN_PUBLIC_PROPS].info[k] = v;
     }
     return this;
   }
 
   mergeIntoInfo(info: GExceptionInfo): this {
-    this[G_EXCEPTION_OWN_PROPS][GExceptionV0.INFO_KEY] = this.getInfo() || {};
+    this[G_EXCEPTION_OWN_PUBLIC_PROPS][GExceptionV0.INFO_KEY] =
+      this.getInfo() || {};
     Object.assign(
-      this[G_EXCEPTION_OWN_PROPS][GExceptionV0.INFO_KEY] as object,
+      this[G_EXCEPTION_OWN_PUBLIC_PROPS][GExceptionV0.INFO_KEY] as object,
       info,
     );
     return this;
@@ -767,14 +877,12 @@ export class GExceptionV0<
     return this.getInfo()?.[k];
   }
 
-  setMessage(message: GExceptionMessage): this {
-    return this.setErrProp(GExceptionV0.MESSAGE_KEY, message);
-  }
-
   getMessage(): GExceptionMessage {
     if (this[G_EXCEPTION_DERIVED_PROPS].compiledMessage === undefined) {
-      this[G_EXCEPTION_DERIVED_PROPS].compiledMessage = this.compileTemplate(
-        this[G_EXCEPTION_OWN_PROPS].message,
+      this[G_EXCEPTION_DERIVED_PROPS].compiledMessage = compileTemplate(
+        this,
+        this[G_EXCEPTION_OWN_PUBLIC_PROPS][GExceptionV0.MESSAGE_KEY],
+        GExceptionV0.MESSAGE_KEY,
       );
     }
     return this[G_EXCEPTION_DERIVED_PROPS].compiledMessage;
@@ -785,8 +893,10 @@ export class GExceptionV0<
       return this.stack;
     }
     if (this[G_EXCEPTION_DERIVED_PROPS].compiledStack === undefined) {
-      this[G_EXCEPTION_DERIVED_PROPS].compiledStack = this.compileTemplate(
+      this[G_EXCEPTION_DERIVED_PROPS].compiledStack = compileTemplate(
+        this,
         this.stack,
+        'stack',
       );
     }
     return this[G_EXCEPTION_DERIVED_PROPS].compiledStack;
@@ -795,76 +905,84 @@ export class GExceptionV0<
   setDisplayMessage(
     displayMessage: GExceptionDisplayMessageInput = true,
   ): this {
-    return this.setErrProp(GExceptionV0.DISPLAY_MESSAGE_KEY, displayMessage);
+    return this.setExceptionProp(
+      GExceptionV0.DISPLAY_MESSAGE_KEY,
+      displayMessage,
+    );
   }
 
   getDisplayMessage(): GExceptionDisplayMessageResult {
     if (
-      typeof this[G_EXCEPTION_OWN_PROPS].displayMessage !== 'string' &&
-      [undefined, false].includes(this[G_EXCEPTION_OWN_PROPS].displayMessage)
+      typeof this[G_EXCEPTION_OWN_PUBLIC_PROPS].displayMessage !== 'string' &&
+      [undefined, false].includes(
+        this[G_EXCEPTION_OWN_PUBLIC_PROPS].displayMessage,
+      )
     ) {
       return undefined;
-    } else if (this[G_EXCEPTION_OWN_PROPS].displayMessage === true) {
+    } else if (this[G_EXCEPTION_OWN_PUBLIC_PROPS].displayMessage === true) {
       return this.getMessage();
     }
     if (this[G_EXCEPTION_DERIVED_PROPS].compiledDisplayMessage === undefined) {
-      this[G_EXCEPTION_DERIVED_PROPS].compiledDisplayMessage =
-        this.compileTemplate(
-          this[G_EXCEPTION_OWN_PROPS].displayMessage as string,
-        );
+      this[G_EXCEPTION_DERIVED_PROPS].compiledDisplayMessage = compileTemplate(
+        this,
+        this[G_EXCEPTION_OWN_PUBLIC_PROPS][
+          GExceptionV0.DISPLAY_MESSAGE_KEY
+        ] as string,
+        GExceptionV0.DISPLAY_MESSAGE_KEY,
+      );
     }
     return this[G_EXCEPTION_DERIVED_PROPS].compiledDisplayMessage;
   }
 
   setInfo(info: GExceptionInfo): this {
-    return this.setErrProp(INFO_KEY, info);
+    return this.setExceptionProp(INFO_KEY, info);
   }
 
   getInfo(): GExceptionInfoResult {
-    return this[G_EXCEPTION_OWN_PROPS][GExceptionV0.INFO_KEY];
+    return this[G_EXCEPTION_OWN_PUBLIC_PROPS][GExceptionV0.INFO_KEY];
   }
 
   setCode(code: GExceptionCode): this {
-    return this.setErrProp(GExceptionV0.CODE_KEY, code);
+    return this.setExceptionProp(GExceptionV0.CODE_KEY, code);
   }
 
   getCode(): GExceptionCodeResult {
-    return this[G_EXCEPTION_OWN_PROPS][GExceptionV0.CODE_KEY];
+    return this[G_EXCEPTION_OWN_PUBLIC_PROPS][GExceptionV0.CODE_KEY];
   }
 
   setId(id: GExceptionId) {
-    return this.setErrProp(GExceptionV0.ID_KEY, id);
+    return this.setExceptionProp(GExceptionV0.ID_KEY, id);
   }
 
   getId(): GExceptionIdResult {
-    return this[G_EXCEPTION_OWN_PROPS][GExceptionV0.ID_KEY];
+    return this[G_EXCEPTION_OWN_PUBLIC_PROPS][GExceptionV0.ID_KEY];
   }
 
   setCauses(causes: GExceptionCauses) {
-    return this.setErrProp(GExceptionV0.CAUSES_KEY, causes);
+    return this.setExceptionProp(GExceptionV0.CAUSES_KEY, causes);
   }
 
   getCauses(): GExceptionCausesResult {
-    return this[G_EXCEPTION_OWN_PROPS][GExceptionV0.CAUSES_KEY];
+    return this[G_EXCEPTION_OWN_PUBLIC_PROPS][GExceptionV0.CAUSES_KEY];
   }
 
   setNumCode(numCode: number) {
-    return this.setErrProp(GExceptionV0.NUM_CODE_KEY, numCode);
+    return this.setExceptionProp(GExceptionV0.NUM_CODE_KEY, numCode);
   }
 
   getNumCode() {
-    return this[G_EXCEPTION_OWN_PROPS][GExceptionV0.NUM_CODE_KEY];
+    return this[G_EXCEPTION_OWN_PUBLIC_PROPS][GExceptionV0.NUM_CODE_KEY];
   }
 
   setTimestamp(timestamp?: string): this {
-    return this.setErrProp(
+    return this.setExceptionProp(
       GExceptionV0.TIMESTAMP_KEY,
       timestamp || new Date().toISOString(),
     );
   }
 
   getTimestamp(): GExceptionTimestampResult {
-    return this[G_EXCEPTION_OWN_PROPS][GExceptionV0.TIMESTAMP_KEY];
+    return this[G_EXCEPTION_OWN_PUBLIC_PROPS][GExceptionV0.TIMESTAMP_KEY];
   }
 
   protected setExtensionProp<K extends keyof ExtensionProps>(
@@ -891,19 +1009,26 @@ export class GExceptionV0<
   }
 
   hadConstructorFirstArgsProblems(): boolean {
-    return this[G_EXCEPTION_HAD_CONSTRUCTOR_PROBLEMS];
+    return this[G_EXCEPTION_HAD_PROBLEMS];
   }
 
-  getConstructorProblems(): GExceptionConstructorProblemsReport | undefined {
+  getProblems(): GExceptionProblemsReport | undefined {
     if (
       !this.hadConstructorFirstArgsProblems() ||
-      typeof this._getProblemsInfoPropKey() !== 'string'
+      typeof getProblemsInfoPropKey(this) !== 'string'
     ) {
       return undefined;
     }
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
-    return this.getInfo()?.[this._getProblemsInfoPropKey()];
+    return this.getInfo()?.[getProblemsInfoPropKey(this)];
+  }
+
+  getEffectiveConfig(): GExceptionConfig {
+    return {
+      ...GExceptionV0.getConfig(),
+      ...(this[G_EXCEPTION_OWN_PRIVATE_PROPS]?.[GExceptionV0.CONFIG_KEY] || {}),
+    };
   }
 
   /**
