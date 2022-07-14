@@ -1,1 +1,1 @@
-export { GExceptionV0, GExceptionConstructorArguments } from './GExceptionV0';
+export { GException, GExceptionConstructorArguments } from './GException';

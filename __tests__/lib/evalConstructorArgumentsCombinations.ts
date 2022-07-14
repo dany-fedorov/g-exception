@@ -1,4 +1,4 @@
-import { GExceptionV0 } from '../../src';
+import { GException } from '../../src';
 
 const NO_ARG = Symbol('NO_ARG');
 
@@ -56,7 +56,7 @@ export function evalConstructorArgumentsCombinations(config: TranslateConfig): {
   tableString: string;
 } {
   const combinations = mkCombinations(Object.values(TypeClass)).map((combo) => {
-    const e = new GExceptionV0(
+    const e = new GException(
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
       ...combo.filter((c) => c !== NO_ARG).map((c) => translate(c, config)),

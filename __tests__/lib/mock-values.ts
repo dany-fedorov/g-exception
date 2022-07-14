@@ -6,3 +6,4 @@ export const MOCK_ERR_CAUSE_STR = 'MOCK_ERR_CAUSE_STR';
 export const MOCK_ERR_CODE = 'MOCK_ERR_CODE';
 export const MOCK_DISPLAY_MESSAGE = 'MOCK_DISPLAY_MESSAGE';
 export const MOCK_ERR_CODE_CTR_ARG = { code: MOCK_ERR_CODE };
+export const MOCK_BAD_HBS = '{{MOCK_BAD_HBS}';

@@ -1,14 +1,14 @@
-import { GExceptionV0 } from '../../src/GExceptionV0';
+import { GException } from '../../src/GException';
 import { evalConstructorArgumentsCombinations } from '../lib/evalConstructorArgumentsCombinations';
 
 beforeAll(() => {
-  GExceptionV0.mergeConfig({
+  GException.mergeConfig({
     logProblemsToStdout: false,
   });
 });
 
 afterAll(() => {
-  GExceptionV0.mergeConfig({
+  GException.mergeConfig({
     logProblemsToStdout: true,
   });
 });
@@ -48,7 +48,7 @@ describe('GException constructor: generated tables', () => {
     const { tableString } = evalConstructorArgumentsCombinations({
       'number': 123,
       'string': 'mock_str',
-      'object': new GExceptionV0('test'),
+      'object': new GException('test'),
       'else': undefined,
     });
     expect(tableString).toMatchSnapshot('object:GExceptionV0,else:undefined');
