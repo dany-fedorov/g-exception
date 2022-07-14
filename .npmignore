@@ -13,6 +13,9 @@
 .eslintignore
 node_modules/
 tsconfig.json
+tsconfig.build.json
 webpack.config.js
 **/*.md
+/coverage
+__tests__
 
