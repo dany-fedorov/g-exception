@@ -7,6 +7,7 @@ const config: Config.InitialOptions = {
     '^.+\\.ts?$': 'ts-jest',
   },
   testRegex: '/__tests__/.*.test(\\..+)?\\.ts$',
+  'collectCoverageFrom': ['src/**/*.ts'],
 };
 
 export default config;

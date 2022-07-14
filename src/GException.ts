@@ -1,13 +1,7 @@
 import * as hbs from 'handlebars';
 import * as crypto from 'node:crypto';
 import { jsonStringifySafe } from './json-stringify-safe';
-
-export function toArray<T>(x: T | T[]): T[] {
-  if (Array.isArray(x)) {
-    return x;
-  }
-  return [x];
-}
+import { toArray } from './to-array';
 
 const G_EXCEPTION_CLASS_NAME = Symbol('CLASS_NAME');
 const G_EXCEPTION_OWN_PUBLIC_PROPS = Symbol('OWN_PUBLIC_PROPS');
