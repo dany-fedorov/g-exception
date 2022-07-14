@@ -51,6 +51,6 @@ describe('GException constructor: generated tables', () => {
       'object': new GException('test'),
       'else': undefined,
     });
-    expect(tableString).toMatchSnapshot('object:GExceptionV0,else:undefined');
+    expect(tableString).toMatchSnapshot('object:GException,else:undefined');
   });
 });

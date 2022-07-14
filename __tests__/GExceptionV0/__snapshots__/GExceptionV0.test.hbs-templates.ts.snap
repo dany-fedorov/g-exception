@@ -1,5 +1,118 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`Message templating Invalid template: stack 1`] = `
+"Error: heh{{h}
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at"
+`;
+
+exports[`Message templating Invalid template: stack 2`] = `
+"Error: heh{{h}
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at"
+`;
+
+exports[`Message templating Invalid template: stack 3`] = `
+"Error: heh{{h}
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at"
+`;
+
+exports[`Message templating Invalid template: stack 4`] = `
+Object {
+  "handlebarsProblems": Array [
+    Object {
+      "caught": [Error: Parse error on line 1:
+Error: heh{{h}    at Function.fr
+-------------^
+Expecting 'CLOSE_RAW_BLOCK', 'CLOSE', 'CLOSE_UNESCAPED', 'OPEN_SEXPR', 'CLOSE_SEXPR', 'ID', 'OPEN_BLOCK_PARAMS', 'STRING', 'NUMBER', 'BOOLEAN', 'UNDEFINED', 'NULL', 'DATA', 'SEP', got 'INVALID'],
+      "problemReason": "GException problem: Problem during handlebars compilation of template \\"stack\\"
+- template: Error: heh{{h}
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+- caught: Error: Parse error on line 1:
+Error: heh{{h}    at Function.fr
+-------------^
+Expecting 'CLOSE_RAW_BLOCK', 'CLOSE', 'CLOSE_UNESCAPED', 'OPEN_SEXPR', 'CLOSE_SEXPR', 'ID', 'OPEN_BLOCK_PARAMS', 'STRING', 'NUMBER', 'BOOLEAN', 'UNDEFINED', 'NULL', 'DATA', 'SEP', got 'INVALID'",
+      "template": "Error: heh{{h}
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at",
+      "templatePropName": "stack",
+    },
+  ],
+}
+`;
+
 exports[`Message templating Valid: displayMessage:displayMessage 1`] = `
 "<displayMessage>
 double braces / code:                 MOCK_ERR_CODE
@@ -12,11 +125,11 @@ double braces / id:                   {{id}}
 double braces / displayMessage:       {{displayMessage}}
 double braces / timestamp:            {{timestamp}}
 double braces / causes:               {{causes}}
-double braces / causes.json:          {{json causes}}
+double braces / causes.json:          {{json causes 0}}
 double braces / cause0:               {{causes.[0]}}
 double braces / cause1:               {{causes.[1]}}
 double braces / info:                 {{info}}
-double braces / info.json:            {{json info}}
+double braces / info.json:            {{json info 0}}
 double braces / info.prop1:           {{info.prop1}}
 double braces / info.prop2.prop22:    {{info.prop2.prop22}}
 double braces / info.prop3:           {{info.prop3}}
@@ -28,11 +141,11 @@ triple braces / id:                   {{{id}}}
 triple braces / displayMessage:       {{{displayMessage}}}
 triple braces / timestamp:            {{{timestamp}}}
 triple braces / causes:               {{{causes}}}
-triple braces / causes.json:          {{{json causes}}}
+triple braces / causes.json:          {{{json causes 0}}}
 triple braces / cause0:               {{{causes.[0]}}}
 triple braces / cause1:               {{{causes.[1]}}}
 triple braces / info:                 {{{info}}}
-triple braces / info.json:            {{{json info}}}
+triple braces / info.json:            {{{json info 0}}}
 triple braces / info.prop1:           {{{info.prop1}}}
 triple braces / info.prop2.prop22:    {{{info.prop2.prop22}}}
 triple braces / info.prop3:           {{{info.prop3}}}
@@ -70,11 +183,11 @@ double braces / id:                   {{id}}
 double braces / displayMessage:       {{displayMessage}}
 double braces / timestamp:            {{timestamp}}
 double braces / causes:               {{causes}}
-double braces / causes.json:          {{json causes}}
+double braces / causes.json:          {{json causes 0}}
 double braces / cause0:               {{causes.[0]}}
 double braces / cause1:               {{causes.[1]}}
 double braces / info:                 {{info}}
-double braces / info.json:            {{json info}}
+double braces / info.json:            {{json info 0}}
 double braces / info.prop1:           {{info.prop1}}
 double braces / info.prop2.prop22:    {{info.prop2.prop22}}
 double braces / info.prop3:           {{info.prop3}}
@@ -86,11 +199,11 @@ triple braces / id:                   {{{id}}}
 triple braces / displayMessage:       {{{displayMessage}}}
 triple braces / timestamp:            {{{timestamp}}}
 triple braces / causes:               {{{causes}}}
-triple braces / causes.json:          {{{json causes}}}
+triple braces / causes.json:          {{{json causes 0}}}
 triple braces / cause0:               {{{causes.[0]}}}
 triple braces / cause1:               {{{causes.[1]}}}
 triple braces / info:                 {{{info}}}
-triple braces / info.json:            {{{json info}}}
+triple braces / info.json:            {{{json info 0}}}
 triple braces / info.prop1:           {{{info.prop1}}}
 triple braces / info.prop2.prop22:    {{{info.prop2.prop22}}}
 triple braces / info.prop3:           {{{info.prop3}}}
@@ -132,6 +245,12 @@ triple braces / recursive / message: END
 
 exports[`Message templating Valid: displayMessage:stack 1`] = `
 "Error: MOCK_ERR_MSG
+    at
+    at
+    at
+    at
+    at
+    at
     at
     at
     at
@@ -187,11 +306,11 @@ double braces / id:                   {{id}}
 double braces / displayMessage:       {{displayMessage}}
 double braces / timestamp:            {{timestamp}}
 double braces / causes:               {{causes}}
-double braces / causes.json:          {{json causes}}
+double braces / causes.json:          {{json causes 0}}
 double braces / cause0:               {{causes.[0]}}
 double braces / cause1:               {{causes.[1]}}
 double braces / info:                 {{info}}
-double braces / info.json:            {{json info}}
+double braces / info.json:            {{json info 0}}
 double braces / info.prop1:           {{info.prop1}}
 double braces / info.prop2.prop22:    {{info.prop2.prop22}}
 double braces / info.prop3:           {{info.prop3}}
@@ -203,11 +322,11 @@ triple braces / id:                   {{{id}}}
 triple braces / displayMessage:       {{{displayMessage}}}
 triple braces / timestamp:            {{{timestamp}}}
 triple braces / causes:               {{{causes}}}
-triple braces / causes.json:          {{{json causes}}}
+triple braces / causes.json:          {{{json causes 0}}}
 triple braces / cause0:               {{{causes.[0]}}}
 triple braces / cause1:               {{{causes.[1]}}}
 triple braces / info:                 {{{info}}}
-triple braces / info.json:            {{{json info}}}
+triple braces / info.json:            {{{json info 0}}}
 triple braces / info.prop1:           {{{info.prop1}}}
 triple braces / info.prop2.prop22:    {{{info.prop2.prop22}}}
 triple braces / info.prop3:           {{{info.prop3}}}
@@ -234,11 +353,11 @@ double braces / id:                   {{id}}
 double braces / displayMessage:       {{displayMessage}}
 double braces / timestamp:            {{timestamp}}
 double braces / causes:               {{causes}}
-double braces / causes.json:          {{json causes}}
+double braces / causes.json:          {{json causes 0}}
 double braces / cause0:               {{causes.[0]}}
 double braces / cause1:               {{causes.[1]}}
 double braces / info:                 {{info}}
-double braces / info.json:            {{json info}}
+double braces / info.json:            {{json info 0}}
 double braces / info.prop1:           {{info.prop1}}
 double braces / info.prop2.prop22:    {{info.prop2.prop22}}
 double braces / info.prop3:           {{info.prop3}}
@@ -250,11 +369,11 @@ triple braces / id:                   {{{id}}}
 triple braces / displayMessage:       {{{displayMessage}}}
 triple braces / timestamp:            {{{timestamp}}}
 triple braces / causes:               {{{causes}}}
-triple braces / causes.json:          {{{json causes}}}
+triple braces / causes.json:          {{{json causes 0}}}
 triple braces / cause0:               {{{causes.[0]}}}
 triple braces / cause1:               {{{causes.[1]}}}
 triple braces / info:                 {{{info}}}
-triple braces / info.json:            {{{json info}}}
+triple braces / info.json:            {{{json info 0}}}
 triple braces / info.prop1:           {{{info.prop1}}}
 triple braces / info.prop2.prop22:    {{{info.prop2.prop22}}}
 triple braces / info.prop3:           {{{info.prop3}}}
@@ -317,11 +436,11 @@ double braces / id:                   {{id}}
 double braces / displayMessage:       {{displayMessage}}
 double braces / timestamp:            {{timestamp}}
 double braces / causes:               {{causes}}
-double braces / causes.json:          {{json causes}}
+double braces / causes.json:          {{json causes 0}}
 double braces / cause0:               {{causes.[0]}}
 double braces / cause1:               {{causes.[1]}}
 double braces / info:                 {{info}}
-double braces / info.json:            {{json info}}
+double braces / info.json:            {{json info 0}}
 double braces / info.prop1:           {{info.prop1}}
 double braces / info.prop2.prop22:    {{info.prop2.prop22}}
 double braces / info.prop3:           {{info.prop3}}
@@ -333,11 +452,11 @@ triple braces / id:                   {{{id}}}
 triple braces / displayMessage:       {{{displayMessage}}}
 triple braces / timestamp:            {{{timestamp}}}
 triple braces / causes:               {{{causes}}}
-triple braces / causes.json:          {{{json causes}}}
+triple braces / causes.json:          {{{json causes 0}}}
 triple braces / cause0:               {{{causes.[0]}}}
 triple braces / cause1:               {{{causes.[1]}}}
 triple braces / info:                 {{{info}}}
-triple braces / info.json:            {{{json info}}}
+triple braces / info.json:            {{{json info 0}}}
 triple braces / info.prop1:           {{{info.prop1}}}
 triple braces / info.prop2.prop22:    {{{info.prop2.prop22}}}
 triple braces / info.prop3:           {{{info.prop3}}}
@@ -364,11 +483,11 @@ double braces / id:                   {{id}}
 double braces / displayMessage:       {{displayMessage}}
 double braces / timestamp:            {{timestamp}}
 double braces / causes:               {{causes}}
-double braces / causes.json:          {{json causes}}
+double braces / causes.json:          {{json causes 0}}
 double braces / cause0:               {{causes.[0]}}
 double braces / cause1:               {{causes.[1]}}
 double braces / info:                 {{info}}
-double braces / info.json:            {{json info}}
+double braces / info.json:            {{json info 0}}
 double braces / info.prop1:           {{info.prop1}}
 double braces / info.prop2.prop22:    {{info.prop2.prop22}}
 double braces / info.prop3:           {{info.prop3}}
@@ -380,11 +499,11 @@ triple braces / id:                   {{{id}}}
 triple braces / displayMessage:       {{{displayMessage}}}
 triple braces / timestamp:            {{{timestamp}}}
 triple braces / causes:               {{{causes}}}
-triple braces / causes.json:          {{{json causes}}}
+triple braces / causes.json:          {{{json causes 0}}}
 triple braces / cause0:               {{{causes.[0]}}}
 triple braces / cause1:               {{{causes.[1]}}}
 triple braces / info:                 {{{info}}}
-triple braces / info.json:            {{{json info}}}
+triple braces / info.json:            {{{json info 0}}}
 triple braces / info.prop1:           {{{info.prop1}}}
 triple braces / info.prop2.prop22:    {{{info.prop2.prop22}}}
 triple braces / info.prop3:           {{{info.prop3}}}
@@ -402,6 +521,12 @@ triple braces / recursive / message: END
 </message>
 triple braces / recursive / message: END
 </message>
+    at
+    at
+    at
+    at
+    at
+    at
     at
     at
     at

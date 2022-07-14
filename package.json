@@ -4,7 +4,7 @@
   "description": "G",
   "main": "./dist/index.js",
   "scripts": {
-    "test": "jest",
+    "test": "node --stack-trace-limit=1000 ./node_modules/.bin/jest",
     "build": "tsc -p ./tsconfig.build.json",
     "prepare": "rm -rf ./dist && npm run build",
     "build-watch": "chokidar './src/**/*.ts' -c 'npm run build' -i './node_modules/**/*' --initial"

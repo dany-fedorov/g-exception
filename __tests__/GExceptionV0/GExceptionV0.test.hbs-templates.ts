@@ -26,15 +26,13 @@ const TEMPLATE = [
   `double braces / displayMessage:       ${GException.t.displayMessage}`,
   `double braces / timestamp:            ${GException.t.timestamp}`,
   `double braces / causes:               ${GException.t.causes()}`,
-  `double braces / causes.json:          ${GException.t.causes.json}`,
+  `double braces / causes.json:          ${GException.t.causes.json()}`,
   `double braces / cause0:               ${GException.t.causes(0)}`,
   `double braces / cause1:               ${GException.t.causes(1)}`,
   `double braces / info:                 ${GException.t.info()}`,
-  `double braces / info.json:            ${GException.t.info.json}`,
+  `double braces / info.json:            ${GException.t.info.json()}`,
   `double braces / info.prop1:           ${GException.t.info('prop1')}`,
-  `double braces / info.prop2.prop22:    ${GException.t.info(
-    'prop2.prop22',
-  )}`,
+  `double braces / info.prop2.prop22:    ${GException.t.info('prop2.prop22')}`,
   `double braces / info.prop3:           ${GException.t.info('prop3')}`,
   `double braces / info.prop4.prop44[0]: ${GException.t.info(
     'prop4.prop44.[0]',
@@ -46,11 +44,11 @@ const TEMPLATE = [
   `triple braces / displayMessage:       ${GException._tt.displayMessage}`,
   `triple braces / timestamp:            ${GException._tt.timestamp}`,
   `triple braces / causes:               ${GException._tt.causes()}`,
-  `triple braces / causes.json:          ${GException._tt.causes.json}`,
+  `triple braces / causes.json:          ${GException._tt.causes.json()}`,
   `triple braces / cause0:               ${GException._tt.causes(0)}`,
   `triple braces / cause1:               ${GException._tt.causes(1)}`,
   `triple braces / info:                 ${GException._tt.info()}`,
-  `triple braces / info.json:            ${GException._tt.info.json}`,
+  `triple braces / info.json:            ${GException._tt.info.json()}`,
   `triple braces / info.prop1:           ${GException._tt.info('prop1')}`,
   `triple braces / info.prop2.prop22:    ${GException._tt.info(
     'prop2.prop22',
@@ -117,7 +115,7 @@ describe('Message templating', () => {
   test('Invalid template: message', () => {
     const BAD_TEMPLATE = 'heh{{h}';
     const e = GException.from({
-      message: BAD_TEMPLATE,
+      [GException.k.message]: BAD_TEMPLATE,
     });
     expect(e.getMessage()).toBe(BAD_TEMPLATE);
     expect(e.getMessage()).toBe(BAD_TEMPLATE);
@@ -130,6 +128,12 @@ describe('Message templating', () => {
       heh{{h}
       ------^
       Expecting 'CLOSE_RAW_BLOCK', 'CLOSE', 'CLOSE_UNESCAPED', 'OPEN_SEXPR', 'CLOSE_SEXPR', 'ID', 'OPEN_BLOCK_PARAMS', 'STRING', 'NUMBER', 'BOOLEAN', 'UNDEFINED', 'NULL', 'DATA', 'SEP', got 'INVALID'],
+            "problemReason": "GException problem: Problem during handlebars compilation of template \\"message\\"
+      - template: heh{{h}
+      - caught: Error: Parse error on line 1:
+      heh{{h}
+      ------^
+      Expecting 'CLOSE_RAW_BLOCK', 'CLOSE', 'CLOSE_UNESCAPED', 'OPEN_SEXPR', 'CLOSE_SEXPR', 'ID', 'OPEN_BLOCK_PARAMS', 'STRING', 'NUMBER', 'BOOLEAN', 'UNDEFINED', 'NULL', 'DATA', 'SEP', got 'INVALID'",
             "template": "heh{{h}",
             "templatePropName": "message",
           },
@@ -141,8 +145,8 @@ describe('Message templating', () => {
   test('Invalid template: displayMessage', () => {
     const BAD_TEMPLATE = 'heh{{h}';
     const e = GException.from({
-      message: MOCK_ERR_MSG,
-      displayMessage: BAD_TEMPLATE,
+      [GException.k.message]: MOCK_ERR_MSG,
+      [GException.k.displayMessage]: BAD_TEMPLATE,
     });
     expect(e.getDisplayMessage()).toBe(BAD_TEMPLATE);
     expect(e.getDisplayMessage()).toBe(BAD_TEMPLATE);
@@ -155,6 +159,12 @@ describe('Message templating', () => {
       heh{{h}
       ------^
       Expecting 'CLOSE_RAW_BLOCK', 'CLOSE', 'CLOSE_UNESCAPED', 'OPEN_SEXPR', 'CLOSE_SEXPR', 'ID', 'OPEN_BLOCK_PARAMS', 'STRING', 'NUMBER', 'BOOLEAN', 'UNDEFINED', 'NULL', 'DATA', 'SEP', got 'INVALID'],
+            "problemReason": "GException problem: Problem during handlebars compilation of template \\"displayMessage\\"
+      - template: heh{{h}
+      - caught: Error: Parse error on line 1:
+      heh{{h}
+      ------^
+      Expecting 'CLOSE_RAW_BLOCK', 'CLOSE', 'CLOSE_UNESCAPED', 'OPEN_SEXPR', 'CLOSE_SEXPR', 'ID', 'OPEN_BLOCK_PARAMS', 'STRING', 'NUMBER', 'BOOLEAN', 'UNDEFINED', 'NULL', 'DATA', 'SEP', got 'INVALID'",
             "template": "heh{{h}",
             "templatePropName": "displayMessage",
           },
@@ -166,76 +176,70 @@ describe('Message templating', () => {
   test('Invalid template: stack', () => {
     const BAD_TEMPLATE = 'heh{{h}';
     const e = GException.from({
-      message: BAD_TEMPLATE,
+      [GException.k.message]: BAD_TEMPLATE,
     });
-    expect(removeStacktraceEntries(e.getStack())).toMatchInlineSnapshot(`
-      "Error: heh{{h}
-          at
-          at
-          at
-          at
-          at
-          at
-          at
-          at
-          at
-          at"
-    `);
-    expect(removeStacktraceEntries(e.getStack())).toMatchInlineSnapshot(`
-      "Error: heh{{h}
-          at
-          at
-          at
-          at
-          at
-          at
-          at
-          at
-          at
-          at"
-    `);
-    expect(removeStacktraceEntries(e.getStack())).toMatchInlineSnapshot(`
-      "Error: heh{{h}
-          at
-          at
-          at
-          at
-          at
-          at
-          at
-          at
-          at
-          at"
-    `);
+    expect(removeStacktraceEntries(e.getStack())).toMatchSnapshot();
+    expect(removeStacktraceEntries(e.getStack())).toMatchSnapshot();
+    expect(removeStacktraceEntries(e.getStack())).toMatchSnapshot();
     expect({
       ...e.getProblems(),
       handlebarsProblems: e.getProblems()?.handlebarsProblems?.map((p) => ({
         ...p,
+        problemReason: removeStacktraceEntries(p.problemReason),
         template: removeStacktraceEntries(p.template),
       })),
-    }).toMatchInlineSnapshot(`
-      Object {
-        "handlebarsProblems": Array [
-          Object {
-            "caught": [Error: Parse error on line 1:
-      Error: heh{{h}    at Function.fr
-      -------------^
-      Expecting 'CLOSE_RAW_BLOCK', 'CLOSE', 'CLOSE_UNESCAPED', 'OPEN_SEXPR', 'CLOSE_SEXPR', 'ID', 'OPEN_BLOCK_PARAMS', 'STRING', 'NUMBER', 'BOOLEAN', 'UNDEFINED', 'NULL', 'DATA', 'SEP', got 'INVALID'],
-            "template": "Error: heh{{h}
-          at
-          at
-          at
-          at
-          at
-          at
-          at
-          at
-          at
-          at",
-            "templatePropName": "stack",
-          },
-        ],
-      }
+    }).toMatchSnapshot();
+  });
+
+  test('Json helper with indent 1', () => {
+    const e = GException.from({
+      [GException.k.message]: '{{json info 2}}',
+      [GException.k.info]: { a: 1 },
+    });
+    expect(e.getMessage()).toMatchInlineSnapshot(`
+      "{
+        &quot;a&quot;: 1
+      }"
     `);
+  });
+
+  test('Json helper with indent 2', () => {
+    const e = GException.from({
+      [GException.k.message]: '{{{json info 2}}}',
+      [GException.k.info]: { a: 1 },
+    });
+    expect(e.getMessage()).toMatchInlineSnapshot(`
+      "{
+        \\"a\\": 1
+      }"
+    `);
+  });
+
+  test('Json helper with indent 3', () => {
+    const e = GException.from({
+      [GException.k.message]: `${GException._tt.info.json(10)}`,
+      [GException.k.info]: { a: 1 },
+    });
+    expect(e.getMessage()).toMatchInlineSnapshot(`
+      "{
+                \\"a\\": 1
+      }"
+    `);
+  });
+
+  test('Json helper with bad arguments 1', () => {
+    const e = GException.from({
+      [GException.k.message]: `{{{json info "heh" "hah"}}}`,
+      [GException.k.info]: { a: 1 },
+    });
+    expect(e.getMessage()).toMatchInlineSnapshot(`"{\\"a\\":1}"`);
+  });
+
+  test('Json helper with bad arguments 2', () => {
+    const e = GException.from({
+      [GException.k.message]: `{{{json info "heh" "hah"}}}`,
+      [GException.k.info]: { a: 1 },
+    });
+    expect(e.getMessage()).toMatchInlineSnapshot(`"{\\"a\\":1}"`);
   });
 });

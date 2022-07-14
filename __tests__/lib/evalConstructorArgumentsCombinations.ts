@@ -46,7 +46,7 @@ function translate(tc: TypeClass, config: TranslateConfig): unknown {
 const COL_WIDTH = 20;
 const COL_SEP = ' | ';
 
-const TABLE_DELIM = Array.from({ length: COL_WIDTH * 5 + COL_SEP.length * 3 })
+const TABLE_DELIM = Array.from({ length: COL_WIDTH * 5 + COL_SEP.length * 4 })
   .map((_x) => '-')
   .join('');
 
@@ -61,7 +61,10 @@ export function evalConstructorArgumentsCombinations(config: TranslateConfig): {
       // @ts-ignore
       ...combo.filter((c) => c !== NO_ARG).map((c) => translate(c, config)),
     );
-    return { combo, hadConstructorFirstArgsProblems: e.hadConstructorFirstArgsProblems() };
+    return {
+      combo,
+      hadConstructorFirstArgsProblems: e.hadProblems(),
+    };
   });
   const validRows: string[] = [];
   const invalidRows: string[] = [];
@@ -117,7 +120,7 @@ export function evalConstructorArgumentsCombinations(config: TranslateConfig): {
     ...validRows,
     TABLE_DELIM,
     invalidReport,
-    validReport,
-  ].join('\n');
+    validReport + '|',
+  ].join('|\n');
   return { tableString };
 }
