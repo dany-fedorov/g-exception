@@ -1,0 +1,540 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Message templating Invalid template: stack 1`] = `
+"Error: heh{{h}
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at"
+`;
+
+exports[`Message templating Invalid template: stack 2`] = `
+"Error: heh{{h}
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at"
+`;
+
+exports[`Message templating Invalid template: stack 3`] = `
+"Error: heh{{h}
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at"
+`;
+
+exports[`Message templating Invalid template: stack 4`] = `
+Object {
+  "handlebarsProblems": Array [
+    Object {
+      "caught": [Error: Parse error on line 1:
+Error: heh{{h}    at Function.fr
+-------------^
+Expecting 'CLOSE_RAW_BLOCK', 'CLOSE', 'CLOSE_UNESCAPED', 'OPEN_SEXPR', 'CLOSE_SEXPR', 'ID', 'OPEN_BLOCK_PARAMS', 'STRING', 'NUMBER', 'BOOLEAN', 'UNDEFINED', 'NULL', 'DATA', 'SEP', got 'INVALID'],
+      "problemReason": "GException problem: Problem during handlebars compilation of template \\"stack\\"
+- template: Error: heh{{h}
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+- caught: Error: Parse error on line 1:
+Error: heh{{h}    at Function.fr
+-------------^
+Expecting 'CLOSE_RAW_BLOCK', 'CLOSE', 'CLOSE_UNESCAPED', 'OPEN_SEXPR', 'CLOSE_SEXPR', 'ID', 'OPEN_BLOCK_PARAMS', 'STRING', 'NUMBER', 'BOOLEAN', 'UNDEFINED', 'NULL', 'DATA', 'SEP', got 'INVALID'",
+      "template": "Error: heh{{h}
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at",
+      "templatePropName": "stack",
+    },
+  ],
+}
+`;
+
+exports[`Message templating Valid: displayMessage:displayMessage 1`] = `
+"<displayMessage>
+double braces / code:                 MOCK_ERR_CODE
+double braces / numCode:              123
+double braces / id:                   MOCK_ERR_ID
+double braces / displayMessage:       &lt;displayMessage&gt;
+double braces / code:                 {{code}}
+double braces / numCode:              {{numCode}}
+double braces / id:                   {{id}}
+double braces / displayMessage:       {{displayMessage}}
+double braces / timestamp:            {{timestamp}}
+double braces / causes:               {{causes}}
+double braces / causes.json:          {{json causes 0}}
+double braces / cause0:               {{causes.[0]}}
+double braces / cause1:               {{causes.[1]}}
+double braces / info:                 {{info}}
+double braces / info.json:            {{json info 0}}
+double braces / info.prop1:           {{info.prop1}}
+double braces / info.prop2.prop22:    {{info.prop2.prop22}}
+double braces / info.prop3:           {{info.prop3}}
+double braces / info.prop4.prop44[0]: {{info.prop4.prop44.[0]}}
+---
+triple braces / code:                 {{{code}}}
+triple braces / numCode:              {{{numCode}}}
+triple braces / id:                   {{{id}}}
+triple braces / displayMessage:       {{{displayMessage}}}
+triple braces / timestamp:            {{{timestamp}}}
+triple braces / causes:               {{{causes}}}
+triple braces / causes.json:          {{{json causes 0}}}
+triple braces / cause0:               {{{causes.[0]}}}
+triple braces / cause1:               {{{causes.[1]}}}
+triple braces / info:                 {{{info}}}
+triple braces / info.json:            {{{json info 0}}}
+triple braces / info.prop1:           {{{info.prop1}}}
+triple braces / info.prop2.prop22:    {{{info.prop2.prop22}}}
+triple braces / info.prop3:           {{{info.prop3}}}
+triple braces / info.prop4.prop44[0]: {{{info.prop4.prop44.[0]}}}
+---
+---
+double braces / recursive / message: BEGIN
+{{message}}
+double braces / recursive / message: END
+---
+---
+triple braces / recursive / message: BEGIN
+{{{message}}}
+triple braces / recursive / message: END
+&lt;/displayMessage&gt;
+double braces / timestamp:            2022-07-13T11:12:25.741Z
+double braces / causes:               1,2,3
+double braces / causes.json:          [1,2,3]
+double braces / cause0:               1
+double braces / cause1:               2
+double braces / info:                 [object Object]
+double braces / info.json:            {&quot;prop1&quot;:&quot;value of info.prop1&quot;,&quot;prop2&quot;:{&quot;prop22&quot;:&quot;value of info.prop2.prop22&quot;},&quot;prop3&quot;:&quot;value of info.prop3&quot;,&quot;prop4&quot;:{&quot;prop44&quot;:[&quot;value of info.prop4.prop44[0]&quot;]}}
+double braces / info.prop1:           value of info.prop1
+double braces / info.prop2.prop22:    value of info.prop2.prop22
+double braces / info.prop3:           value of info.prop3
+double braces / info.prop4.prop44[0]: value of info.prop4.prop44[0]
+---
+triple braces / code:                 MOCK_ERR_CODE
+triple braces / numCode:              123
+triple braces / id:                   MOCK_ERR_ID
+triple braces / displayMessage:       <displayMessage>
+double braces / code:                 {{code}}
+double braces / numCode:              {{numCode}}
+double braces / id:                   {{id}}
+double braces / displayMessage:       {{displayMessage}}
+double braces / timestamp:            {{timestamp}}
+double braces / causes:               {{causes}}
+double braces / causes.json:          {{json causes 0}}
+double braces / cause0:               {{causes.[0]}}
+double braces / cause1:               {{causes.[1]}}
+double braces / info:                 {{info}}
+double braces / info.json:            {{json info 0}}
+double braces / info.prop1:           {{info.prop1}}
+double braces / info.prop2.prop22:    {{info.prop2.prop22}}
+double braces / info.prop3:           {{info.prop3}}
+double braces / info.prop4.prop44[0]: {{info.prop4.prop44.[0]}}
+---
+triple braces / code:                 {{{code}}}
+triple braces / numCode:              {{{numCode}}}
+triple braces / id:                   {{{id}}}
+triple braces / displayMessage:       {{{displayMessage}}}
+triple braces / timestamp:            {{{timestamp}}}
+triple braces / causes:               {{{causes}}}
+triple braces / causes.json:          {{{json causes 0}}}
+triple braces / cause0:               {{{causes.[0]}}}
+triple braces / cause1:               {{{causes.[1]}}}
+triple braces / info:                 {{{info}}}
+triple braces / info.json:            {{{json info 0}}}
+triple braces / info.prop1:           {{{info.prop1}}}
+triple braces / info.prop2.prop22:    {{{info.prop2.prop22}}}
+triple braces / info.prop3:           {{{info.prop3}}}
+triple braces / info.prop4.prop44[0]: {{{info.prop4.prop44.[0]}}}
+---
+---
+double braces / recursive / message: BEGIN
+{{message}}
+double braces / recursive / message: END
+---
+---
+triple braces / recursive / message: BEGIN
+{{{message}}}
+triple braces / recursive / message: END
+</displayMessage>
+triple braces / timestamp:            2022-07-13T11:12:25.741Z
+triple braces / causes:               1,2,3
+triple braces / causes.json:          [1,2,3]
+triple braces / cause0:               1
+triple braces / cause1:               2
+triple braces / info:                 [object Object]
+triple braces / info.json:            {\\"prop1\\":\\"value of info.prop1\\",\\"prop2\\":{\\"prop22\\":\\"value of info.prop2.prop22\\"},\\"prop3\\":\\"value of info.prop3\\",\\"prop4\\":{\\"prop44\\":[\\"value of info.prop4.prop44[0]\\"]}}
+triple braces / info.prop1:           value of info.prop1
+triple braces / info.prop2.prop22:    value of info.prop2.prop22
+triple braces / info.prop3:           value of info.prop3
+triple braces / info.prop4.prop44[0]: value of info.prop4.prop44[0]
+---
+---
+double braces / recursive / message: BEGIN
+MOCK_ERR_MSG
+double braces / recursive / message: END
+---
+---
+triple braces / recursive / message: BEGIN
+MOCK_ERR_MSG
+triple braces / recursive / message: END
+</displayMessage>"
+`;
+
+exports[`Message templating Valid: displayMessage:stack 1`] = `
+"Error: MOCK_ERR_MSG
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at"
+`;
+
+exports[`Message templating Valid: message:message 1`] = `
+"<message>
+double braces / code:                 MOCK_ERR_CODE
+double braces / numCode:              123
+double braces / id:                   MOCK_ERR_ID
+double braces / displayMessage:       MOCK_DISPLAY_MESSAGE
+double braces / timestamp:            2022-07-13T11:12:25.741Z
+double braces / causes:               1,2,3
+double braces / causes.json:          [1,2,3]
+double braces / cause0:               1
+double braces / cause1:               2
+double braces / info:                 [object Object]
+double braces / info.json:            {&quot;prop1&quot;:&quot;value of info.prop1&quot;,&quot;prop2&quot;:{&quot;prop22&quot;:&quot;value of info.prop2.prop22&quot;},&quot;prop3&quot;:&quot;value of info.prop3&quot;,&quot;prop4&quot;:{&quot;prop44&quot;:[&quot;value of info.prop4.prop44[0]&quot;]}}
+double braces / info.prop1:           value of info.prop1
+double braces / info.prop2.prop22:    value of info.prop2.prop22
+double braces / info.prop3:           value of info.prop3
+double braces / info.prop4.prop44[0]: value of info.prop4.prop44[0]
+---
+triple braces / code:                 MOCK_ERR_CODE
+triple braces / numCode:              123
+triple braces / id:                   MOCK_ERR_ID
+triple braces / displayMessage:       MOCK_DISPLAY_MESSAGE
+triple braces / timestamp:            2022-07-13T11:12:25.741Z
+triple braces / causes:               1,2,3
+triple braces / causes.json:          [1,2,3]
+triple braces / cause0:               1
+triple braces / cause1:               2
+triple braces / info:                 [object Object]
+triple braces / info.json:            {\\"prop1\\":\\"value of info.prop1\\",\\"prop2\\":{\\"prop22\\":\\"value of info.prop2.prop22\\"},\\"prop3\\":\\"value of info.prop3\\",\\"prop4\\":{\\"prop44\\":[\\"value of info.prop4.prop44[0]\\"]}}
+triple braces / info.prop1:           value of info.prop1
+triple braces / info.prop2.prop22:    value of info.prop2.prop22
+triple braces / info.prop3:           value of info.prop3
+triple braces / info.prop4.prop44[0]: value of info.prop4.prop44[0]
+---
+---
+double braces / recursive / message: BEGIN
+&lt;message&gt;
+double braces / code:                 {{code}}
+double braces / numCode:              {{numCode}}
+double braces / id:                   {{id}}
+double braces / displayMessage:       {{displayMessage}}
+double braces / timestamp:            {{timestamp}}
+double braces / causes:               {{causes}}
+double braces / causes.json:          {{json causes 0}}
+double braces / cause0:               {{causes.[0]}}
+double braces / cause1:               {{causes.[1]}}
+double braces / info:                 {{info}}
+double braces / info.json:            {{json info 0}}
+double braces / info.prop1:           {{info.prop1}}
+double braces / info.prop2.prop22:    {{info.prop2.prop22}}
+double braces / info.prop3:           {{info.prop3}}
+double braces / info.prop4.prop44[0]: {{info.prop4.prop44.[0]}}
+---
+triple braces / code:                 {{{code}}}
+triple braces / numCode:              {{{numCode}}}
+triple braces / id:                   {{{id}}}
+triple braces / displayMessage:       {{{displayMessage}}}
+triple braces / timestamp:            {{{timestamp}}}
+triple braces / causes:               {{{causes}}}
+triple braces / causes.json:          {{{json causes 0}}}
+triple braces / cause0:               {{{causes.[0]}}}
+triple braces / cause1:               {{{causes.[1]}}}
+triple braces / info:                 {{{info}}}
+triple braces / info.json:            {{{json info 0}}}
+triple braces / info.prop1:           {{{info.prop1}}}
+triple braces / info.prop2.prop22:    {{{info.prop2.prop22}}}
+triple braces / info.prop3:           {{{info.prop3}}}
+triple braces / info.prop4.prop44[0]: {{{info.prop4.prop44.[0]}}}
+---
+---
+double braces / recursive / message: BEGIN
+{{message}}
+double braces / recursive / message: END
+---
+---
+triple braces / recursive / message: BEGIN
+{{{message}}}
+triple braces / recursive / message: END
+&lt;/message&gt;
+double braces / recursive / message: END
+---
+---
+triple braces / recursive / message: BEGIN
+<message>
+double braces / code:                 {{code}}
+double braces / numCode:              {{numCode}}
+double braces / id:                   {{id}}
+double braces / displayMessage:       {{displayMessage}}
+double braces / timestamp:            {{timestamp}}
+double braces / causes:               {{causes}}
+double braces / causes.json:          {{json causes 0}}
+double braces / cause0:               {{causes.[0]}}
+double braces / cause1:               {{causes.[1]}}
+double braces / info:                 {{info}}
+double braces / info.json:            {{json info 0}}
+double braces / info.prop1:           {{info.prop1}}
+double braces / info.prop2.prop22:    {{info.prop2.prop22}}
+double braces / info.prop3:           {{info.prop3}}
+double braces / info.prop4.prop44[0]: {{info.prop4.prop44.[0]}}
+---
+triple braces / code:                 {{{code}}}
+triple braces / numCode:              {{{numCode}}}
+triple braces / id:                   {{{id}}}
+triple braces / displayMessage:       {{{displayMessage}}}
+triple braces / timestamp:            {{{timestamp}}}
+triple braces / causes:               {{{causes}}}
+triple braces / causes.json:          {{{json causes 0}}}
+triple braces / cause0:               {{{causes.[0]}}}
+triple braces / cause1:               {{{causes.[1]}}}
+triple braces / info:                 {{{info}}}
+triple braces / info.json:            {{{json info 0}}}
+triple braces / info.prop1:           {{{info.prop1}}}
+triple braces / info.prop2.prop22:    {{{info.prop2.prop22}}}
+triple braces / info.prop3:           {{{info.prop3}}}
+triple braces / info.prop4.prop44[0]: {{{info.prop4.prop44.[0]}}}
+---
+---
+double braces / recursive / message: BEGIN
+{{message}}
+double braces / recursive / message: END
+---
+---
+triple braces / recursive / message: BEGIN
+{{{message}}}
+triple braces / recursive / message: END
+</message>
+triple braces / recursive / message: END
+</message>"
+`;
+
+exports[`Message templating Valid: message:stack 1`] = `
+"Error: <message>
+double braces / code:                 MOCK_ERR_CODE
+double braces / numCode:              123
+double braces / id:                   MOCK_ERR_ID
+double braces / displayMessage:       MOCK_DISPLAY_MESSAGE
+double braces / timestamp:            2022-07-13T11:12:25.741Z
+double braces / causes:               1,2,3
+double braces / causes.json:          [1,2,3]
+double braces / cause0:               1
+double braces / cause1:               2
+double braces / info:                 [object Object]
+double braces / info.json:            {&quot;prop1&quot;:&quot;value of info.prop1&quot;,&quot;prop2&quot;:{&quot;prop22&quot;:&quot;value of info.prop2.prop22&quot;},&quot;prop3&quot;:&quot;value of info.prop3&quot;,&quot;prop4&quot;:{&quot;prop44&quot;:[&quot;value of info.prop4.prop44[0]&quot;]}}
+double braces / info.prop1:           value of info.prop1
+double braces / info.prop2.prop22:    value of info.prop2.prop22
+double braces / info.prop3:           value of info.prop3
+double braces / info.prop4.prop44[0]: value of info.prop4.prop44[0]
+---
+triple braces / code:                 MOCK_ERR_CODE
+triple braces / numCode:              123
+triple braces / id:                   MOCK_ERR_ID
+triple braces / displayMessage:       MOCK_DISPLAY_MESSAGE
+triple braces / timestamp:            2022-07-13T11:12:25.741Z
+triple braces / causes:               1,2,3
+triple braces / causes.json:          [1,2,3]
+triple braces / cause0:               1
+triple braces / cause1:               2
+triple braces / info:                 [object Object]
+triple braces / info.json:            {\\"prop1\\":\\"value of info.prop1\\",\\"prop2\\":{\\"prop22\\":\\"value of info.prop2.prop22\\"},\\"prop3\\":\\"value of info.prop3\\",\\"prop4\\":{\\"prop44\\":[\\"value of info.prop4.prop44[0]\\"]}}
+triple braces / info.prop1:           value of info.prop1
+triple braces / info.prop2.prop22:    value of info.prop2.prop22
+triple braces / info.prop3:           value of info.prop3
+triple braces / info.prop4.prop44[0]: value of info.prop4.prop44[0]
+---
+---
+double braces / recursive / message: BEGIN
+&lt;message&gt;
+double braces / code:                 {{code}}
+double braces / numCode:              {{numCode}}
+double braces / id:                   {{id}}
+double braces / displayMessage:       {{displayMessage}}
+double braces / timestamp:            {{timestamp}}
+double braces / causes:               {{causes}}
+double braces / causes.json:          {{json causes 0}}
+double braces / cause0:               {{causes.[0]}}
+double braces / cause1:               {{causes.[1]}}
+double braces / info:                 {{info}}
+double braces / info.json:            {{json info 0}}
+double braces / info.prop1:           {{info.prop1}}
+double braces / info.prop2.prop22:    {{info.prop2.prop22}}
+double braces / info.prop3:           {{info.prop3}}
+double braces / info.prop4.prop44[0]: {{info.prop4.prop44.[0]}}
+---
+triple braces / code:                 {{{code}}}
+triple braces / numCode:              {{{numCode}}}
+triple braces / id:                   {{{id}}}
+triple braces / displayMessage:       {{{displayMessage}}}
+triple braces / timestamp:            {{{timestamp}}}
+triple braces / causes:               {{{causes}}}
+triple braces / causes.json:          {{{json causes 0}}}
+triple braces / cause0:               {{{causes.[0]}}}
+triple braces / cause1:               {{{causes.[1]}}}
+triple braces / info:                 {{{info}}}
+triple braces / info.json:            {{{json info 0}}}
+triple braces / info.prop1:           {{{info.prop1}}}
+triple braces / info.prop2.prop22:    {{{info.prop2.prop22}}}
+triple braces / info.prop3:           {{{info.prop3}}}
+triple braces / info.prop4.prop44[0]: {{{info.prop4.prop44.[0]}}}
+---
+---
+double braces / recursive / message: BEGIN
+{{message}}
+double braces / recursive / message: END
+---
+---
+triple braces / recursive / message: BEGIN
+{{{message}}}
+triple braces / recursive / message: END
+&lt;/message&gt;
+double braces / recursive / message: END
+---
+---
+triple braces / recursive / message: BEGIN
+<message>
+double braces / code:                 {{code}}
+double braces / numCode:              {{numCode}}
+double braces / id:                   {{id}}
+double braces / displayMessage:       {{displayMessage}}
+double braces / timestamp:            {{timestamp}}
+double braces / causes:               {{causes}}
+double braces / causes.json:          {{json causes 0}}
+double braces / cause0:               {{causes.[0]}}
+double braces / cause1:               {{causes.[1]}}
+double braces / info:                 {{info}}
+double braces / info.json:            {{json info 0}}
+double braces / info.prop1:           {{info.prop1}}
+double braces / info.prop2.prop22:    {{info.prop2.prop22}}
+double braces / info.prop3:           {{info.prop3}}
+double braces / info.prop4.prop44[0]: {{info.prop4.prop44.[0]}}
+---
+triple braces / code:                 {{{code}}}
+triple braces / numCode:              {{{numCode}}}
+triple braces / id:                   {{{id}}}
+triple braces / displayMessage:       {{{displayMessage}}}
+triple braces / timestamp:            {{{timestamp}}}
+triple braces / causes:               {{{causes}}}
+triple braces / causes.json:          {{{json causes 0}}}
+triple braces / cause0:               {{{causes.[0]}}}
+triple braces / cause1:               {{{causes.[1]}}}
+triple braces / info:                 {{{info}}}
+triple braces / info.json:            {{{json info 0}}}
+triple braces / info.prop1:           {{{info.prop1}}}
+triple braces / info.prop2.prop22:    {{{info.prop2.prop22}}}
+triple braces / info.prop3:           {{{info.prop3}}}
+triple braces / info.prop4.prop44[0]: {{{info.prop4.prop44.[0]}}}
+---
+---
+double braces / recursive / message: BEGIN
+{{message}}
+double braces / recursive / message: END
+---
+---
+triple braces / recursive / message: BEGIN
+{{{message}}}
+triple braces / recursive / message: END
+</message>
+triple braces / recursive / message: END
+</message>
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at
+    at"
+`;
