@@ -10,9 +10,7 @@ const G_EXCEPTION_DERIVED_PROPS = Symbol('DERIVED_PROPS');
 const G_EXCEPTION_EXTENSION_PROPS = Symbol('EXTENSION_PROPS');
 const G_EXCEPTION_STATIC_CONFIG = Symbol('STATIC_CONFIG');
 const G_EXCEPTION_HAD_PROBLEMS = Symbol('HAD_PROBLEMS');
-const G_EXCEPTION_PROBLEMS_INFO_PROP_KEY = Symbol(
-  'CONSTRUCTOR_PROBLEMS_INFO_PROP_KEY',
-);
+const G_EXCEPTION_PROBLEMS_INFO_PROP_KEY = Symbol('PROBLEMS_INFO_PROP_KEY');
 
 type GExceptionMessage = string;
 
@@ -945,7 +943,8 @@ export class GException<
    * Type Predicates
    */
 
-  static isSubtype(obj: unknown): boolean {
+  // at the very least obj is GException
+  static isSubtype(obj: unknown): obj is GException {
     return (
       typeof obj === 'object' &&
       obj != null &&
@@ -954,7 +953,8 @@ export class GException<
     );
   }
 
-  static isExactly(obj: unknown): boolean {
+  // at the very least obj is GException
+  static isExactly(obj: unknown): obj is GException {
     return (
       this.isSubtype(obj) &&
       (obj as GException)?.[G_EXCEPTION_CLASS_NAME] === this.name

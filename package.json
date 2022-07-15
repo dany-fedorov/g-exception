@@ -1,7 +1,7 @@
 {
   "name": "g-exception",
-  "version": "0.0.8",
-  "description": "G",
+  "version": "0.0.11",
+  "description": "Better exceptions for TypeScript and JavaScript",
   "main": "./dist/index.js",
   "scripts": {
     "test": "node --stack-trace-limit=1000 ./node_modules/.bin/jest",
