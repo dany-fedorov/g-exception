@@ -932,11 +932,12 @@ export class GException<
   }
 
   static from(exceptionProperties: GExceptionOwnProps): GException {
-    return new GException(exceptionProperties.message, exceptionProperties);
+    return new this(exceptionProperties.message, exceptionProperties);
   }
 
+  // Might want to override this in extended types for proper typing
   static new(...constructorArgs: GExceptionConstructorArguments): GException {
-    return new GException(...constructorArgs);
+    return new this(...constructorArgs);
   }
 
   /**

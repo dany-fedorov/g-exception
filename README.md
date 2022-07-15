@@ -49,3 +49,4 @@
 - Support rich formatting for error messages? With like tables and CSS? Or maybe add HTML format to `serializeException`
   ?
 - Think about integrations with frameworks/services or logging libraries. 
+- Add assertion functionality?
