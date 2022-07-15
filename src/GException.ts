@@ -475,23 +475,28 @@ function parseJsonHelperArgs(args: unknown[]): JsonHelperArgsParsed {
 function mkHbsHelpers(self: GException) {
   return {
     json: function hbsJsonHelper(...args: unknown[]): string {
-      const { value, indent, options } = parseJsonHelperArgs(args);
-      return jsonStringifySafe(value, indent, {
-        onCyclicReference: (key) => {
-          try {
-            const message = mkProblemMessage(
-              [
-                `Handlebars tried to stringify a cyclic object`,
-                `- cyclic reference on key: ${key}`,
-                `- template location: ${options?.loc?.start?.line}:${options?.loc?.start?.column} - ${options?.loc?.end?.line}:${options?.loc?.end?.column}`,
-              ].join('\n'),
-            );
-            logProblem(self, message);
-          } catch (caught: any) {
-            logProblem(self, caught?.stack || caught);
-          }
-        },
-      });
+      try {
+        const { value, indent, options } = parseJsonHelperArgs(args);
+        return jsonStringifySafe(value, indent, {
+          onCyclicReference: (key) => {
+            try {
+              const message = mkProblemMessage(
+                [
+                  `Handlebars tried to stringify a cyclic object`,
+                  `- cyclic reference on key: ${key}`,
+                  `- template location: ${options?.loc?.start?.line}:${options?.loc?.start?.column} - ${options?.loc?.end?.line}:${options?.loc?.end?.column}`,
+                ].join('\n'),
+              );
+              logProblem(self, message);
+            } catch (caught: unknown) {
+              logProblem(self, (caught as any)?.stack || caught);
+            }
+          },
+        });
+      } catch (caught: unknown) {
+        logProblem(self, (caught as any)?.stack || caught);
+        return '';
+      }
     },
   };
 }
@@ -580,7 +585,7 @@ function mergeInfoForConstructor(
     let v;
     try {
       v = info[k];
-    } catch (caught) {
+    } catch (caught: unknown) {
       self[G_EXCEPTION_HAD_PROBLEMS] = true;
       const message = mkProblemMessage(
         `Problem accessing key ${k} in "${GException.k.info}" during processing argument ${argumentNumber} (of total ${totalArgsNumber}): ${caught}`,
@@ -631,7 +636,7 @@ function initFromArguments(
           // eslint-disable-next-line @typescript-eslint/ban-ts-comment
           // @ts-ignore
           v = arg[k];
-        } catch (caught) {
+        } catch (caught: unknown) {
           const problemReason = mkProblemMessage(
             `Problem accessing key ${k} in ${n}${sfx} argument (of total ${totalArgsN}): ${caught}`,
           );
@@ -651,7 +656,7 @@ function initFromArguments(
           setExceptionPropForConstructor(self, k, v, n, totalArgsN);
         }
       }
-    } catch (caught) {
+    } catch (caught: unknown) {
       const problemReason = mkProblemMessage(
         `Problem processing ${n}${sfx} argument (of total ${totalArgsN}): ${caught}`,
       );
@@ -734,7 +739,7 @@ function compileTemplate(
     return hbs.compile(template)(getTemplateCompilationContext(self), {
       helpers: mkHbsHelpers(self),
     });
-  } catch (caught) {
+  } catch (caught: unknown) {
     const problemReason = mkProblemMessage(
       [
         `Problem during handlebars compilation of template "${templatePropName}"`,
@@ -1049,7 +1054,7 @@ export class GException<
       let v;
       try {
         v = info[k];
-      } catch (caught) {
+      } catch (caught: unknown) {
         const problemReason = mkProblemMessage(
           `Problem accessing key ${k} in "${GException.k.info}" during mergeInfo: ${caught}`,
         );

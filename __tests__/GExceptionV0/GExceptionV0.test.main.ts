@@ -794,6 +794,25 @@ describe('Misc', () => {
         "INFO_GOOD_KEY": "value of INFO_GOOD_KEY",
       }
     `);
+
+    expect(consoleWarnSpy.mock.calls).toMatchInlineSnapshot(`
+      Array [
+        Array [
+          "GException problem: Problem accessing key INFO_BAD_KEY in \\"info\\" during processing argument 2 (of total 2): Error: badHandler: Error accessing INFO_BAD_KEY on infoObject",
+        ],
+        Array [
+          "GException problem: Problem accessing key INFO_BAD_KEY in \\"info\\" during mergeInfo: Error: badHandler: Error accessing INFO_BAD_KEY on infoObject",
+        ],
+        Array [
+          "GException problem: Problem during handlebars compilation of template \\"message\\"
+      - template: {{MOCK_BAD_HBS}
+      - caught: Error: Parse error on line 1:
+      {{MOCK_BAD_HBS}
+      --------------^
+      Expecting 'CLOSE_RAW_BLOCK', 'CLOSE', 'CLOSE_UNESCAPED', 'OPEN_SEXPR', 'CLOSE_SEXPR', 'ID', 'OPEN_BLOCK_PARAMS', 'STRING', 'NUMBER', 'BOOLEAN', 'UNDEFINED', 'NULL', 'DATA', 'SEP', got 'INVALID'",
+        ],
+      ]
+    `);
   });
 
   test('Extensions api', () => {
@@ -817,6 +836,12 @@ describe('Misc', () => {
     expect(h.setSpecialProp(SPECIAL_PROP_VAL_2).getSpecialProp()).toBe(
       SPECIAL_PROP_VAL_2,
     );
+
+    const h2 = new HException('special::{{special}}');
+    h2.setSpecialProp(SPECIAL_PROP_VAL_2);
+    expect(h2.getMessage()).toBe(`special::${SPECIAL_PROP_VAL_2}`);
+
+    expect(consoleWarnSpy.mock.calls).toMatchInlineSnapshot(`Array []`);
   });
 
   test('Handlebars compilation is disabled', () => {
@@ -829,6 +854,7 @@ describe('Misc', () => {
       handlebarsCompilation: true,
     });
     expect(e2.getMessage()).toMatchInlineSnapshot(`""`);
+    expect(consoleWarnSpy.mock.calls).toMatchInlineSnapshot(`Array []`);
   });
 });
 
