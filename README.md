@@ -1,5 +1,8 @@
 # GException
 
+> **Warning**
+> Everything pre 1.0.0 is prone to breaking changes even with patch versions.
+
 ## Principles
 
 - Nothing ever throws inside GException code.
@@ -13,6 +16,7 @@
 - Unit-test Everything.
 - Near >95% coverage for all versions.
 - Most documentation is inlined. Inline documentation should be enough to understand all APIs.
+- Follow Semantic Versioning after 1.0.0.
 
 ## Plan for 1.0.0
 
