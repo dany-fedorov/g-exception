@@ -48,5 +48,7 @@
 - Web UI to deserialize exception?
 - Support rich formatting for error messages? With like tables and CSS? Or maybe add HTML format to `serializeException`
   ?
-- Think about integrations with frameworks/services or logging libraries. 
+- Think about integrations with frameworks/services or logging libraries.
 - Add assertion functionality?
+- Check popular js libraries, what they throw - like axios, typeorm, aws-sdk etc, - and make sure GException works well
+  with different formats.
