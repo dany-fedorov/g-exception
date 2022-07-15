@@ -943,7 +943,8 @@ export class GException<
    * Type Predicates
    */
 
-  static isSubtype(obj: unknown): boolean {
+  // at the very least obj is GException
+  static isSubtype(obj: unknown): obj is GException {
     return (
       typeof obj === 'object' &&
       obj != null &&
@@ -952,7 +953,8 @@ export class GException<
     );
   }
 
-  static isExactly(obj: unknown): boolean {
+  // at the very least obj is GException
+  static isExactly(obj: unknown): obj is GException {
     return (
       this.isSubtype(obj) &&
       (obj as GException)?.[G_EXCEPTION_CLASS_NAME] === this.name

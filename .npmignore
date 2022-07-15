@@ -16,6 +16,7 @@ tsconfig.json
 tsconfig.build.json
 webpack.config.js
 **/*.md
+!README.md
 /coverage
 __tests__
 
