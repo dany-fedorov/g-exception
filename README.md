@@ -43,6 +43,8 @@
 - Provide prevention mechanism for recursive failing of GExceptions constructor
 - Tests for everything above
 - Come up with inline format for serialization
+- make helpers configurable
+- move out modules for conifgurable-json-stringify, configurable-deep-cloner, configurable-serializer, g-handlebars-helpers (json, safe str)
 
 ## TBD
 

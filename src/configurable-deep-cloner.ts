@@ -1,19 +1,19 @@
-import { GException } from './GException';
+import { GProblem } from './g-problem';
 
-class GDCContext {}
+class ConDCContext {}
 
-interface CloneInput<T> {
+interface ConDCCloneInput<T> {
   src: T;
-  cloner: GDeepCloner;
-  rule: GDCRule;
-  ctx: GDCContext;
+  cloner: ConfigurableDeepCloner;
+  rule: ConDCRule;
+  ctx: ConDCContext;
 }
 
-interface GDCRule<T = any> {
+interface ConDCRule<T = any> {
   id: string | symbol;
   priority: number;
-  test: (src: T, ctx: GDCContext) => src is T;
-  clone: (input: CloneInput<T>) => GDCResult<T>;
+  test: (src: T, ctx: ConDCContext) => src is T;
+  clone: (input: ConDCCloneInput<T>) => ConDCResult<T>;
 }
 
 export enum GCDPrototypeBehavior {
@@ -22,13 +22,13 @@ export enum GCDPrototypeBehavior {
   EXCLUDE_PROTOTYPE = 'EXCLUDE_PROTOTYPE',
 }
 
-interface GDCConfig {
+interface ConDCConfig {
   fallbackRuleId: string | symbol;
   prototypeBehavior: GCDPrototypeBehavior;
-  rules: Record<string | symbol, GDCRule>;
+  rules: Record<string | symbol, ConDCRule>;
 }
 
-type GDCJSPrimitive =
+type ConDCJSPrimitive =
   | number
   | string
   | symbol
@@ -37,13 +37,13 @@ type GDCJSPrimitive =
   | null
   | undefined;
 
-const GDC_DEFAULT_RULE_PREFIX = '$gdc$>defaultRule.';
+const CONDC_DEFAULT_RULE_PREFIX = '$conDC$>defaultRule.';
 
-function gdcDefaultRuleId(ruleName: string): symbol {
-  return Symbol([GDC_DEFAULT_RULE_PREFIX, ruleName].join(''));
+function conDCDefaultRuleId(ruleName: string): symbol {
+  return Symbol([CONDC_DEFAULT_RULE_PREFIX, ruleName].join(''));
 }
 
-function isPrimitive(obj: unknown): obj is GDCJSPrimitive {
+function isPrimitive(obj: unknown): obj is ConDCJSPrimitive {
   const t = typeof obj;
   const res = [
     'number',
@@ -59,7 +59,7 @@ function isPrimitive(obj: unknown): obj is GDCJSPrimitive {
 
 function clonePrimitive({
   src,
-}: CloneInput<GDCJSPrimitive>): GDCResult<GDCJSPrimitive> {
+}: ConDCCloneInput<ConDCJSPrimitive>): ConDCResult<ConDCJSPrimitive> {
   return {
     couldNotClone: false,
     cloned: src,
@@ -67,8 +67,8 @@ function clonePrimitive({
   };
 }
 
-const GDC_DEFAULT_RULE_FOR_PRIMITIVE: GDCRule<GDCJSPrimitive> = {
-  id: gdcDefaultRuleId('primitive'),
+const CONDC_DEFAULT_RULE_FOR_PRIMITIVE: ConDCRule<ConDCJSPrimitive> = {
+  id: conDCDefaultRuleId('primitive'),
   priority: 0,
   test: isPrimitive,
   clone: clonePrimitive,
@@ -76,19 +76,21 @@ const GDC_DEFAULT_RULE_FOR_PRIMITIVE: GDCRule<GDCJSPrimitive> = {
 
 function isPlainObject(obj: unknown): obj is object {
   const res =
-    !!obj && typeof obj === 'object' && obj.constructor.name === 'Object';
+    !!obj &&
+    typeof obj === 'object' &&
+    Object.getPrototypeOf(obj)?.constructor?.name === 'Object';
   return res;
 }
 
 function cloneObjectOwnProperties(
   src: any,
-  cloner: GDeepCloner,
-  ctx: GDCContext,
-): GDCResult<any> {
+  cloner: ConfigurableDeepCloner,
+  ctx: ConDCContext,
+): ConDCResult<any> {
   const names = Object.getOwnPropertyNames(src);
   const symbols = Object.getOwnPropertySymbols(src);
   const newObj: any = {};
-  const allProblems: GException[] = [];
+  const allProblems: GProblem[] = [];
   names.forEach((n) => {
     const { cloned, problems } = cloner.cloneInContext(src[n], ctx);
     allProblems.push(...problems);
@@ -104,9 +106,9 @@ function cloneObjectOwnProperties(
 
 function clonePrototypeChainOf(
   src: any,
-  cloner: GDeepCloner,
-  ctx: GDCContext,
-): GDCResult<any> {
+  cloner: ConfigurableDeepCloner,
+  ctx: ConDCContext,
+): ConDCResult<any> {
   const proto = Object.getPrototypeOf(src);
   if (proto === Object.prototype) {
     return { cloned: Object.prototype, problems: [], couldNotClone: false };
@@ -126,7 +128,7 @@ function clonePlainObject({
   src,
   cloner,
   ctx,
-}: CloneInput<object>): GDCResult<object> {
+}: ConDCCloneInput<object>): ConDCResult<object> {
   const { cloned: objectOwnPropertiesClone, problems: ownCloningProblems } =
     cloneObjectOwnProperties(src, cloner, ctx);
   const prototypeBehavior = cloner.getConfig().prototypeBehavior;
@@ -161,13 +163,11 @@ function clonePlainObject({
       };
     }
     default: {
-      const badPrototypeBehaviorProblem = GException.new(
-        'Unknown prototype behavior configured - {{info.prototypeBehavior}}, falling back to {{info.fallbackPrototypeBehavior}}',
+      const badPrototypeBehaviorProblem = GProblem.new(
+        'Unknown prototype behavior configured - {{prototypeBehavior}}, falling back to {{fallbackPrototypeBehavior}}',
         {
-          info: {
-            prototypeBehavior,
-            fallbackPrototypeBehavior: GCDPrototypeBehavior.REFERENCE_PROTOTYPE,
-          },
+          prototypeBehavior,
+          fallbackPrototypeBehavior: GCDPrototypeBehavior.REFERENCE_PROTOTYPE,
         },
       );
       return {
@@ -182,30 +182,55 @@ function clonePlainObject({
   }
 }
 
-const GDC_DEFAULT_RULE_FOR_PLAIN_OBJECT: GDCRule<object> = {
-  id: gdcDefaultRuleId('object'),
+const CONDC_DEFAULT_RULE_FOR_PLAIN_OBJECT: ConDCRule<object> = {
+  id: conDCDefaultRuleId('object'),
   priority: 0,
   test: isPlainObject,
   clone: clonePlainObject,
 };
 
-const GDC_DEFAULT_RULES_MAP: Record<string | symbol, GDCRule> =
+function isPlainArray(obj: unknown): obj is unknown[] {
+  return (
+    !!obj &&
+    Array.isArray(obj) &&
+    Object.getPrototypeOf(obj)?.constructor?.name === 'Array'
+  );
+}
+
+function clonePlainArray({
+  src,
+  cloner,
+  ctx,
+}: ConDCCloneInput<unknown[]>): ConDCResult<unknown[]> {
+  
+}
+
+const CONDC_DEFAULT_RULE_FOR_ARRAY: ConDCRule<unknown[]> = {
+  id: conDCDefaultRuleId('array'),
+  priority: 0,
+  test: isPlainArray,
+  clone: clonePlainArray,
+};
+
+const CONDC_DEFAULT_RULES_MAP: Record<string | symbol, ConDCRule> =
   Object.fromEntries(
-    [GDC_DEFAULT_RULE_FOR_PRIMITIVE, GDC_DEFAULT_RULE_FOR_PLAIN_OBJECT].map(
-      (r) => [r.id, r],
-    ),
+    [
+      CONDC_DEFAULT_RULE_FOR_PRIMITIVE,
+      CONDC_DEFAULT_RULE_FOR_PLAIN_OBJECT,
+      CONDC_DEFAULT_RULE_FOR_ARRAY,
+    ].map((r) => [r.id, r]),
   );
 
-const GDC_DEFAULT_CONFIG: GDCConfig = {
-  fallbackRuleId: GDC_DEFAULT_RULE_FOR_PLAIN_OBJECT.id,
+const CONDC_DEFAULT_CONFIG: ConDCConfig = {
+  fallbackRuleId: CONDC_DEFAULT_RULE_FOR_PLAIN_OBJECT.id,
   prototypeBehavior: GCDPrototypeBehavior.REFERENCE_PROTOTYPE,
-  rules: GDC_DEFAULT_RULES_MAP,
+  rules: CONDC_DEFAULT_RULES_MAP,
 };
 
 function mergeTwoConfigs(
-  cfg0: GDCConfig,
-  cfg1?: Partial<GDCConfig>,
-): GDCConfig {
+  cfg0: ConDCConfig,
+  cfg1?: Partial<ConDCConfig>,
+): ConDCConfig {
   if (cfg0 === cfg1 || cfg1 === undefined) {
     return cfg0;
   }
@@ -216,25 +241,25 @@ function mergeTwoConfigs(
   };
 }
 
-interface GDCResult<T> {
+interface ConDCResult<T> {
   couldNotClone: boolean;
   cloned: T | null;
-  problems: GException[];
+  problems: GProblem[];
 }
 
 function applyFallbackRule<T>(
-  self: GDeepCloner,
+  self: ConfigurableDeepCloner,
   src: unknown,
-  ctx: GDCContext,
-): GDCResult<T> {
+  ctx: ConDCContext,
+): ConDCResult<T> {
   const fallbackRuleId = self.getConfig().fallbackRuleId;
   if (!fallbackRuleId) {
     return {
       couldNotClone: true,
       cloned: null,
       problems: [
-        GException.new(`Fallback rule id is falsy - {{info.fallbackRuleId}}`, {
-          info: { fallbackRuleId },
+        GProblem.new(`Fallback rule id is falsy - {{fallbackRuleId}}`, {
+          fallbackRuleId: String(fallbackRuleId),
         }),
       ],
     };
@@ -245,12 +270,9 @@ function applyFallbackRule<T>(
       couldNotClone: true,
       cloned: null,
       problems: [
-        GException.new(
-          'Fallback rule not found by id {{info.fallbackRuleId}}',
-          {
-            info: { fallbackRuleId },
-          },
-        ),
+        GProblem.new('Fallback rule not found by id {{fallbackRuleId}}', {
+          fallbackRuleId: String(fallbackRuleId),
+        }),
       ],
     };
   }
@@ -262,13 +284,13 @@ function applyFallbackRule<T>(
   });
 }
 
-interface GDCSelectedRuleResult {
-  rule: GDCRule | null;
-  problems: GException[];
+interface ConDCSelectedRuleResult {
+  rule: ConDCRule | null;
+  problems: GProblem[];
 }
 
-function selectMaxPriorityRules(rules: GDCRule[]): GDCRule[] {
-  let maxPriorityRules: GDCRule[] = [];
+function selectMaxPriorityRules(rules: ConDCRule[]): ConDCRule[] {
+  let maxPriorityRules: ConDCRule[] = [];
   let maxPriority = 0;
   for (const rule of rules) {
     if (rule.priority === maxPriority) {
@@ -281,21 +303,23 @@ function selectMaxPriorityRules(rules: GDCRule[]): GDCRule[] {
   return maxPriorityRules;
 }
 
-function selectRuleToApply(rules: GDCRule[]): GDCSelectedRuleResult {
+function selectRuleToApply(rules: ConDCRule[]): ConDCSelectedRuleResult {
   const maxPriorityRules = selectMaxPriorityRules(rules);
-  const problems: GException[] = [];
+  const problems: GProblem[] = [];
   if (maxPriorityRules.length === 1) {
     return {
-      rule: maxPriorityRules[0] as GDCRule,
+      rule: maxPriorityRules[0] as ConDCRule,
       problems,
     };
   }
   problems.push(
-    GException.new('Several rules match with same priority {{info.ruleIds}}'),
+    GProblem.new('Several rules match with same priority {{ruleIds}}', {
+      ruleIds: rules.map((r) => String(r.id)),
+    }),
   );
   // try to find a default rule among them
   const defaultRules = maxPriorityRules.filter(
-    (r) => !!GDC_DEFAULT_RULES_MAP[r.id],
+    (r) => !!CONDC_DEFAULT_RULES_MAP[r.id],
   );
   if (defaultRules.length === 0) {
     return {
@@ -305,15 +329,14 @@ function selectRuleToApply(rules: GDCRule[]): GDCSelectedRuleResult {
   }
   if (defaultRules.length === 1) {
     return {
-      rule: defaultRules[0] as GDCRule,
+      rule: defaultRules[0] as ConDCRule,
       problems,
     };
   }
   problems.push(
-    GException.new(
-      `CRITICAL! Several matching default rules - {{info.ruleIds}}`,
-      { info: { ruleIds: defaultRules.map((r) => r.id) } },
-    ),
+    GProblem.new(`CRITICAL! Several matching default rules - {{ruleIds}}`, {
+      ruleIds: defaultRules.map((r) => String(r.id)),
+    }),
   );
   return {
     rule: null,
@@ -322,9 +345,9 @@ function selectRuleToApply(rules: GDCRule[]): GDCSelectedRuleResult {
 }
 
 function withProblems<T>(
-  problems: GException[],
-  result: GDCResult<T>,
-): GDCResult<T> {
+  problems: GProblem[],
+  result: ConDCResult<T>,
+): ConDCResult<T> {
   return {
     ...result,
     problems: [...problems, ...result.problems],
@@ -332,11 +355,11 @@ function withProblems<T>(
 }
 
 function applyOneOfSeveralRules<T>(
-  self: GDeepCloner,
+  self: ConfigurableDeepCloner,
   src: unknown,
-  ctx: GDCContext,
-  rules: GDCRule[],
-): GDCResult<T> {
+  ctx: ConDCContext,
+  rules: ConDCRule[],
+): ConDCResult<T> {
   // const rules = selectMaxPriorityRules
   const { rule, problems: selectingProblems } = selectRuleToApply(rules);
   if (rule !== null) {
@@ -353,39 +376,39 @@ function applyOneOfSeveralRules<T>(
   return withProblems(selectingProblems, applyFallbackRule<T>(self, src, ctx));
 }
 
-export class GDeepCloner {
-  private config: GDCConfig;
+export class ConfigurableDeepCloner {
+  private config: ConDCConfig;
 
-  constructor(config?: Partial<GDCConfig>) {
-    this.config = mergeTwoConfigs(GDC_DEFAULT_CONFIG, config);
+  constructor(config?: Partial<ConDCConfig>) {
+    this.config = mergeTwoConfigs(CONDC_DEFAULT_CONFIG, config);
   }
 
-  static new(config?: Partial<GDCConfig>): GDeepCloner {
-    return new GDeepCloner(config);
+  static new(config?: Partial<ConDCConfig>): ConfigurableDeepCloner {
+    return new ConfigurableDeepCloner(config);
   }
 
-  setConfig(config: GDCConfig): this {
+  setConfig(config: ConDCConfig): this {
     this.config = config;
     return this;
   }
 
-  getConfig(): GDCConfig {
+  getConfig(): ConDCConfig {
     return this.config;
   }
 
-  findMatchingRules<T>(src: T, ctx?: GDCContext): GDCRule<T>[] {
-    const ctxEffective = ctx || new GDCContext();
+  findMatchingRules<T>(src: T, ctx?: ConDCContext): ConDCRule<T>[] {
+    const ctxEffective = ctx || new ConDCContext();
     const names = Object.getOwnPropertyNames(this.config.rules);
     const symbols = Object.getOwnPropertySymbols(this.config.rules);
-    const rules: GDCRule<T>[] = [];
+    const rules: ConDCRule<T>[] = [];
     names.forEach((n) => {
-      const r = this.config.rules[n] as GDCRule;
+      const r = this.config.rules[n] as ConDCRule;
       if (r.test(src, ctxEffective)) {
         rules.push(r);
       }
     });
     symbols.forEach((s) => {
-      const r = this.config.rules[s] as GDCRule;
+      const r = this.config.rules[s] as ConDCRule;
       if (r.test(src, ctxEffective)) {
         rules.push(r);
       }
@@ -393,22 +416,23 @@ export class GDeepCloner {
     return rules;
   }
 
-  cloneInContext<T>(src: T, ctx: GDCContext): GDCResult<T> {
-    const allFound: GDCRule<T>[] = this.findMatchingRules(src, ctx);
+  cloneInContext<T>(src: T, ctx: ConDCContext): ConDCResult<T> {
+    const allFound: ConDCRule<T>[] = this.findMatchingRules(src, ctx);
     if (allFound.length === 0) {
       return withProblems(
         [
-          GException.new(
-            'Could not find matching rule, falling back to rule id {{info.fallbackRuleId}}',
-          ).setInfo({
-            fallbackRuleId: this.getConfig().fallbackRuleId,
-          }),
+          GProblem.new(
+            'Could not find matching rule, falling back to rule id {{fallbackRuleId}}',
+            {
+              fallbackRuleId: String(this.getConfig().fallbackRuleId),
+            },
+          ),
         ],
         applyFallbackRule(this, src, ctx),
       );
     }
     if (allFound.length === 1) {
-      const rule = allFound[0] as GDCRule<T>;
+      const rule = allFound[0] as ConDCRule<T>;
       return rule.clone({
         src,
         cloner: this,
@@ -418,20 +442,19 @@ export class GDeepCloner {
     }
     return withProblems(
       [
-        GException.new('Multiple matching rules - {{info.ruleIds}}', {
-          info: {
-            ruleIds: allFound.map((rule) => rule.id),
-          },
+        GProblem.new('Multiple matching rules - {{ruleIds}}', {
+          ruleIds: allFound.map((rule) => rule.id),
         }),
       ],
       applyOneOfSeveralRules(this, src, ctx, allFound),
     );
   }
 
-  clone<T>(src: T, config?: Partial<GDCConfig>): GDCResult<T> {
+  clone<T>(src: T, config?: Partial<ConDCConfig>): ConDCResult<T> {
     const effectiveConfig = mergeTwoConfigs(this.config, config);
-    const effectiveCloner = GDeepCloner.new().setConfig(effectiveConfig);
-    const ctx = new GDCContext();
+    const effectiveCloner =
+      ConfigurableDeepCloner.new().setConfig(effectiveConfig);
+    const ctx = new ConDCContext();
     return effectiveCloner.cloneInContext(src, ctx);
   }
 }
