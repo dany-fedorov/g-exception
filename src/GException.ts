@@ -819,14 +819,15 @@ function tryRecordProblems<K extends keyof GExceptionProblemsReport>(
   if (problemsPropKey === null) {
     return self;
   }
-  const curProblems = (self.getProblems() || {}) as GExceptionProblemsReport;
-  const problemsArray = (curProblems[problemCategory] ||
+  const curProblemsReport = (self.getProblems() ||
+    {}) as GExceptionProblemsReport;
+  const curProblemsInCategory = (curProblemsReport[problemCategory] ||
     []) as GExceptionProblemsReport[K];
   const newProblems = {
-    ...curProblems,
+    ...curProblemsReport,
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
-    [problemCategory]: [...problemsArray, ...problems],
+    [problemCategory]: [...curProblemsInCategory, ...problems],
   };
   self.setInfoProp(problemsPropKey, newProblems);
   return self;
@@ -836,7 +837,7 @@ export class GException<
   ExtensionProps extends GExceptionDefaultExtensionProps = GExceptionDefaultExtensionProps,
 > extends Error {
   /**
-   * Own Props Keys
+   * Keys
    */
 
   static readonly MESSAGE_KEY = MESSAGE_KEY;

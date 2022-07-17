@@ -841,6 +841,12 @@ describe('Misc', () => {
     h2.setSpecialProp(SPECIAL_PROP_VAL_2);
     expect(h2.getMessage()).toBe(`special::${SPECIAL_PROP_VAL_2}`);
 
+    const h3 = (
+      HException.new('special::{{special}}') as HException
+    ).setSpecialProp(SPECIAL_PROP_VAL_2);
+    expect(h3.getMessage()).toBe(`special::${SPECIAL_PROP_VAL_2}`);
+    expect(h3.getMessage()).toBe(h2.getMessage());
+
     expect(consoleWarnSpy.mock.calls).toMatchInlineSnapshot(`Array []`);
   });
 

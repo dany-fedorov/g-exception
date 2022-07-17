@@ -37,6 +37,12 @@
 ## TODO
 
 - Come up with a test where error happens inside handlebars library.
+- Finish deep-clone-
+- Finish serialize
+- Move to using GExceptions as problems
+- Provide prevention mechanism for recursive failing of GExceptions constructor
+- Tests for everything above
+- Come up with inline format for serialization
 
 ## TBD
 
