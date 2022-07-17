@@ -45,6 +45,7 @@
 - Come up with inline format for serialization
 - make helpers configurable
 - move out modules for conifgurable-json-stringify, configurable-deep-cloner, configurable-serializer, g-handlebars-helpers (json, safe str)
+- make GProblem log a warning on construction
 
 ## TBD
 
